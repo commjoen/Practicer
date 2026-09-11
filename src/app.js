@@ -53,8 +53,8 @@ export function createPracticeApp(root) {
     root.innerHTML = `
       <main class="app-shell">
         <section class="hero-card">
-          <p class="eyebrow">GitHub Pages language practice</p>
-          <h1>Practicer Word Play</h1>
+          <p class="eyebrow">Spelling practice for young language learners</p>
+          <h1>Practicer</h1>
           <p class="lead">
             Help kids learn what a word means, then spell it on their own.
             Choose one or more lessons and start a playful spelling round.
@@ -98,16 +98,6 @@ export function createPracticeApp(root) {
               ${message ? `<p class="form-message" role="alert">${escapeHtml(message)}</p>` : ''}
             </div>
           </form>
-        </section>
-
-        <section class="panel plan-panel">
-          <h2>Development plan</h2>
-          <ol>
-            <li>Start with static lesson content in JSON so teachers can extend lessons easily.</li>
-            <li>Keep the first release focused on lesson selection, spelling practice, and scoring.</li>
-            <li>Add automated lint, test, release, renovate, and Pages publishing workflows.</li>
-            <li>Grow later with progress tracking, audio prompts, and richer lesson packs.</li>
-          </ol>
         </section>
       </main>
     `

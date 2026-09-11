@@ -1,5 +1,5 @@
 export function normalizeAnswer(value) {
-  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+  return value.trim().replace(/\s+/g, ' ').toLowerCase()
 }
 
 export function isCorrectAnswer(answer, expectedAnswer) {

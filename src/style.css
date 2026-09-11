@@ -183,11 +183,6 @@ h2 {
   color: #a33434;
 }
 
-.plan-panel ol {
-  margin: 0;
-  padding-left: 1.25rem;
-}
-
 @media (max-width: 640px) {
   .panel-heading,
   .progress-row,
