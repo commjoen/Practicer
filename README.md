@@ -67,6 +67,8 @@ Each lesson has:
 - a `description`
 - a `words` array with `source` and `target` pairs (either side can be a string or an array for accepted alternatives)
 
+Lesson `id` values are selected within the active language pack, so keep them unique per pack.
+
 ## Automation included
 
 - **CI**: installs dependencies on Node 26, then lints, tests, and builds

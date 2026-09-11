@@ -196,10 +196,11 @@ export function createPracticeApp(root) {
     const directionInputs = root.querySelectorAll('input[name="direction"]')
 
     languagePackSelect.addEventListener('change', () => {
+      const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLanguagePackId = languagePackSelect.value
       const nextPack = getActiveLanguagePack()
       const nextLessonIds = new Set(nextPack?.lessons.map((lesson) => lesson.id))
-      state.selectedLessonIds = state.selectedLessonIds.filter((id) =>
+      state.selectedLessonIds = selectedLessonIds.filter((id) =>
         nextLessonIds.has(id)
       )
       renderLessonPicker(message, '#languagePack')
