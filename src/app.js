@@ -197,7 +197,11 @@ export function createPracticeApp(root) {
 
     languagePackSelect.addEventListener('change', () => {
       state.selectedLanguagePackId = languagePackSelect.value
-      state.selectedLessonIds = []
+      const nextPack = getActiveLanguagePack()
+      const nextLessonIds = new Set(nextPack?.lessons.map((lesson) => lesson.id))
+      state.selectedLessonIds = state.selectedLessonIds.filter((id) =>
+        nextLessonIds.has(id)
+      )
       renderLessonPicker(message, '#languagePack')
     })
 

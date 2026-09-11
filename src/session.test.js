@@ -64,6 +64,26 @@ test('buildPracticeQueue can reverse the practice direction', () => {
   ])
 })
 
+test('buildPracticeQueue accepts target variants in forward direction', () => {
+  const variantLessons = [
+    {
+      id: 'three',
+      name: 'Lesson three',
+      words: [{ source: 'hallo', target: ['hello', 'hi'] }]
+    }
+  ]
+
+  assert.deepEqual(buildPracticeQueue(variantLessons, ['three']), [
+    {
+      lessonId: 'three',
+      lessonName: 'Lesson three',
+      prompt: 'hallo',
+      answer: 'hello',
+      acceptedAnswers: ['hello', 'hi']
+    }
+  ])
+})
+
 test('buildPracticeQueue requires at least one lesson', () => {
   assert.throws(
     () => buildPracticeQueue(lessons, []),
