@@ -1,35 +1,95 @@
 {
-  "sourceLanguage": "English",
-  "targetLanguage": "Spanish",
-  "lessons": [
+  "languagePacks": [
     {
-      "id": "animals",
-      "name": "Friendly animals",
-      "description": "Recognise common animals and spell their Spanish names.",
-      "words": [
-        { "prompt": "cat", "answer": "gato" },
-        { "prompt": "dog", "answer": "perro" },
-        { "prompt": "bird", "answer": "pájaro" }
+      "id": "spanish-english",
+      "name": "Spanish ↔ English",
+      "sourceLanguage": "Spanish",
+      "targetLanguage": "English",
+      "lessons": [
+        {
+          "id": "animals",
+          "name": "Friendly animals",
+          "description": "Recognise common animals and spell their English names.",
+          "words": [
+            { "source": "gato", "target": "cat" },
+            { "source": "perro", "target": "dog" },
+            { "source": "pájaro", "target": "bird" }
+          ]
+        },
+        {
+          "id": "colors",
+          "name": "Bright colors",
+          "description": "Match everyday colors to the right spelling.",
+          "words": [
+            { "source": "rojo", "target": "red" },
+            { "source": "azul", "target": "blue" },
+            { "source": "verde", "target": "green" }
+          ]
+        },
+        {
+          "id": "food",
+          "name": "Tasty food",
+          "description": "Practice snack-time words and spell them yourself.",
+          "words": [
+            { "source": "pan", "target": "bread" },
+            { "source": "manzana", "target": "apple" },
+            { "source": "leche", "target": "milk" }
+          ]
+        }
       ]
     },
     {
-      "id": "colors",
-      "name": "Bright colors",
-      "description": "Match everyday colors to the right spelling.",
-      "words": [
-        { "prompt": "red", "answer": "rojo" },
-        { "prompt": "blue", "answer": "azul" },
-        { "prompt": "green", "answer": "verde" }
-      ]
-    },
-    {
-      "id": "food",
-      "name": "Tasty food",
-      "description": "Practice snack-time words and spell them yourself.",
-      "words": [
-        { "prompt": "bread", "answer": "pan" },
-        { "prompt": "apple", "answer": "manzana" },
-        { "prompt": "milk", "answer": "leche" }
+      "id": "dutch-english",
+      "name": "Dutch ↔ English",
+      "sourceLanguage": "Dutch",
+      "targetLanguage": "English",
+      "lessons": [
+        {
+          "id": "dutch-lesson-1",
+          "name": "Lesson 1",
+          "description": "Personal information and introductions.",
+          "words": [
+            { "source": "leeftijd", "target": "age" },
+            { "source": ["omdat", "want"], "target": "because" },
+            { "source": ["favoriet", "lievelings"], "target": "favourite" },
+            { "source": "vrouw", "target": "female" },
+            { "source": "voornaam", "target": "first name" },
+            { "source": "man", "target": "male" },
+            { "source": ["nerveus", "zenuwachtig"], "target": "nervous" },
+            { "source": ["eigenschappen", "karakter"], "target": "qualities" },
+            { "source": "achternaam", "target": "surname" },
+            { "source": "worden", "target": "to become" },
+            { "source": ["beschrijven", "uitleggen"], "target": "to describe" },
+            { "source": ["bewegen", "verplaatsen"], "target": "to move" },
+            { "source": "ik ben goed in", "target": "i am good at" },
+            { "source": "mijn hobby's zijn", "target": "my hobbies are" }
+          ]
+        },
+        {
+          "id": "dutch-lesson-2",
+          "name": "Lesson 2",
+          "description": "Personality and feelings.",
+          "words": [
+            { "source": "actief", "target": "active" },
+            { "source": "slim", "target": "clever" },
+            { "source": "vol vertrouwen", "target": "confident" },
+            { "source": "creatief", "target": "creative" },
+            {
+              "source": ["opgewonden", "druk en vrolijk"],
+              "target": "excited"
+            },
+            { "source": "hulpvaardig", "target": "helpful" },
+            { "source": "eerlijk", "target": "honest" },
+            { "source": "geduldig", "target": "patient" },
+            { "source": "positief", "target": "positive" },
+            { "source": ["stil", "rustig"], "target": "quiet" },
+            { "source": "bang", "target": "scared" },
+            { "source": "moe", "target": "tired" },
+            { "source": ["vasthouden", "houden"], "target": "to hold" },
+            { "source": "lachen", "target": "to laugh" },
+            { "source": "ik ben trots op", "target": "i am proud of" }
+          ]
+        }
       ]
     }
   ]

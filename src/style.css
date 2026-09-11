@@ -21,7 +21,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -67,6 +68,25 @@ input {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
   margin: 1.5rem 0;
+}
+
+.language-controls {
+  margin-top: 1rem;
+}
+
+.direction-options {
+  margin: 0 0 1rem;
+  border: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.direction-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .lesson-card {

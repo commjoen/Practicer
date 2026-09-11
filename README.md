@@ -12,8 +12,9 @@ GitHub Pages URL: https://commjoen.github.io/Practicer/
 ## What the first version does
 
 - Loads lesson content from a JSON file
+- Supports multiple language packs
 - Lets learners select one or more lessons before starting
-- Shows word meanings and asks learners to spell the target-language word
+- Lets learners practice in both language directions
 - Gives instant feedback after every answer
 - Shows a final score at the end of a practice round
 
@@ -53,12 +54,20 @@ npm run build
 
 ## Lesson data
 
-The sample lessons live in `/src/data/lessons.json`. Each lesson has:
+The sample lessons live in `/src/data/lessons.json`. Each language pack has:
 
 - an `id`
 - a `name`
+- `sourceLanguage` and `targetLanguage`
+- a `lessons` array
+
+Each lesson has:
+- an `id`
+- a `name`
 - a `description`
-- a `words` array with `prompt` and `answer` pairs
+- a `words` array with `source` and `target` pairs (either side can be a string or an array for accepted alternatives)
+
+Lesson `id` values are selected within the active language pack, so keep them unique per pack.
 
 ## Automation included
 

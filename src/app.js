@@ -21,7 +21,9 @@ function getSelectedLessonIds(form) {
 
 export function createPracticeApp(root) {
   const state = {
-    lessons: lessonData.lessons,
+    languagePacks: lessonData.languagePacks,
+    selectedLanguagePackId: lessonData.languagePacks[0]?.id ?? '',
+    selectedDirection: 'source-to-target',
     selectedLessonIds: [],
     activeQueue: [],
     currentIndex: 0,
@@ -39,7 +41,16 @@ export function createPracticeApp(root) {
   }
 
   function startPracticeRound() {
-    state.activeQueue = buildPracticeQueue(state.lessons, state.selectedLessonIds)
+    const activePack = getActiveLanguagePack()
+    if (!activePack) {
+      throw new Error('No language packs are available yet.')
+    }
+
+    state.activeQueue = buildPracticeQueue(
+      activePack.lessons,
+      state.selectedLessonIds,
+      state.selectedDirection
+    )
     state.currentIndex = 0
     state.correctAnswers = 0
     state.checkedAnswer = null
@@ -47,8 +58,51 @@ export function createPracticeApp(root) {
     renderQuestion()
   }
 
-  function renderLessonPicker(message = '') {
+  function getActiveLanguagePack() {
+    return (
+      state.languagePacks.find((pack) => pack.id === state.selectedLanguagePackId) ??
+      state.languagePacks[0]
+    )
+  }
+
+  function getDirectionLabels() {
+    const activePack = getActiveLanguagePack()
+    if (!activePack) {
+      return {
+        promptLanguage: 'source',
+        answerLanguage: 'target'
+      }
+    }
+
+    if (state.selectedDirection === 'target-to-source') {
+      return {
+        promptLanguage: activePack.targetLanguage,
+        answerLanguage: activePack.sourceLanguage
+      }
+    }
+
+    return {
+      promptLanguage: activePack.sourceLanguage,
+      answerLanguage: activePack.targetLanguage
+    }
+  }
+
+  function renderLessonPicker(message = '', focusSelector = '') {
     resetSession()
+    const activePack = getActiveLanguagePack()
+    if (!activePack) {
+      root.innerHTML = `
+        <main class="app-shell">
+          <section class="panel">
+            <h2>No lessons available</h2>
+            <p class="lead">Add at least one language pack to start practicing.</p>
+          </section>
+        </main>
+      `
+      return
+    }
+
+    const directionLabels = getDirectionLabels()
 
     root.innerHTML = `
       <main class="app-shell">
@@ -66,14 +120,49 @@ export function createPracticeApp(root) {
             <div>
               <h2>Pick today’s lessons</h2>
               <p>
-                We’ll show the ${escapeHtml(lessonData.sourceLanguage.toLowerCase())} meaning and ask for the
-                ${escapeHtml(lessonData.targetLanguage)} spelling.
+                We’ll show the ${escapeHtml(directionLabels.promptLanguage.toLowerCase())} meaning and ask for the
+                ${escapeHtml(directionLabels.answerLanguage)} spelling.
               </p>
             </div>
           </div>
           <form class="lesson-form" aria-label="Lesson selection">
+            <div class="language-controls">
+              <label class="input-label" for="languagePack">Language pair</label>
+              <select id="languagePack" name="languagePack" class="answer-input">
+                ${state.languagePacks
+                  .map(
+                    (pack) => `
+                      <option value="${escapeHtml(pack.id)}" ${pack.id === activePack.id ? 'selected' : ''}>
+                        ${escapeHtml(pack.name)}
+                      </option>
+                    `
+                  )
+                  .join('')}
+              </select>
+              <fieldset class="direction-options">
+                <legend class="input-label">Practice direction</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="direction"
+                    value="source-to-target"
+                    ${state.selectedDirection === 'source-to-target' ? 'checked' : ''}
+                  />
+                  ${escapeHtml(activePack.sourceLanguage)} → ${escapeHtml(activePack.targetLanguage)}
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="direction"
+                    value="target-to-source"
+                    ${state.selectedDirection === 'target-to-source' ? 'checked' : ''}
+                  />
+                  ${escapeHtml(activePack.targetLanguage)} → ${escapeHtml(activePack.sourceLanguage)}
+                </label>
+              </fieldset>
+            </div>
             <div class="lesson-grid">
-              ${state.lessons
+              ${activePack.lessons
                 .map(
                   (lesson) => `
                     <label class="lesson-card">
@@ -103,8 +192,44 @@ export function createPracticeApp(root) {
     `
 
     const form = root.querySelector('.lesson-form')
+    const languagePackSelect = root.querySelector('#languagePack')
+    const directionInputs = root.querySelectorAll('input[name="direction"]')
+
+    languagePackSelect.addEventListener('change', () => {
+      const selectedLessonIds = getSelectedLessonIds(form)
+      state.selectedLanguagePackId = languagePackSelect.value
+      const nextPack = getActiveLanguagePack()
+      const nextLessonIds = new Set(nextPack?.lessons.map((lesson) => lesson.id))
+      state.selectedLessonIds = selectedLessonIds.filter((id) =>
+        nextLessonIds.has(id)
+      )
+      renderLessonPicker(message, '#languagePack')
+    })
+
+    directionInputs.forEach((input) => {
+      input.addEventListener('change', () => {
+        state.selectedLessonIds = getSelectedLessonIds(form)
+        state.selectedDirection = input.value
+        renderLessonPicker(
+          message,
+          `input[name="direction"][value="${state.selectedDirection}"]`
+        )
+      })
+    })
+
     form.addEventListener('submit', (event) => {
       event.preventDefault()
+      const formData = new FormData(form)
+      const selectedLanguagePackId = formData.get('languagePack')
+      const selectedDirection = formData.get('direction')
+      state.selectedLanguagePackId =
+        typeof selectedLanguagePackId === 'string'
+          ? selectedLanguagePackId
+          : state.selectedLanguagePackId
+      state.selectedDirection =
+        selectedDirection === 'target-to-source'
+          ? selectedDirection
+          : 'source-to-target'
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLessonIds = selectedLessonIds
 
@@ -114,11 +239,16 @@ export function createPracticeApp(root) {
         renderLessonPicker(error.message)
       }
     })
+
+    if (focusSelector) {
+      root.querySelector(focusSelector)?.focus()
+    }
   }
 
   function renderQuestion(feedback = '') {
     const question = state.activeQueue[state.currentIndex]
     const isLastQuestion = state.currentIndex === state.activeQueue.length - 1
+    const directionLabels = getDirectionLabels()
 
     root.innerHTML = `
       <main class="app-shell">
@@ -129,7 +259,7 @@ export function createPracticeApp(root) {
           </div>
           <p class="lesson-tag">${escapeHtml(question.lessonName)}</p>
           <h1>${escapeHtml(question.prompt)}</h1>
-          <p class="lead">Type the ${escapeHtml(lessonData.targetLanguage)} word that matches this meaning.</p>
+          <p class="lead">Type the ${escapeHtml(directionLabels.answerLanguage)} word that matches this meaning.</p>
 
           <form class="answer-form">
             <label for="answer" class="input-label">Your spelling</label>
@@ -187,7 +317,7 @@ export function createPracticeApp(root) {
 
       const answer = answerInput.value
       state.submittedAnswer = answer
-      const correct = isCorrectAnswer(answer, question.answer)
+      const correct = isCorrectAnswer(answer, question.acceptedAnswers)
 
       if (correct) {
         state.correctAnswers += 1
