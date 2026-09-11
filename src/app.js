@@ -22,6 +22,7 @@ function getSelectedLessonIds(form) {
 export function createPracticeApp(root) {
   const state = {
     lessons: lessonData.lessons,
+    selectedLessonIds: [],
     activeQueue: [],
     currentIndex: 0,
     correctAnswers: 0,
@@ -30,6 +31,7 @@ export function createPracticeApp(root) {
   }
 
   function resetSession() {
+    state.selectedLessonIds = []
     state.activeQueue = []
     state.currentIndex = 0
     state.correctAnswers = 0
@@ -101,9 +103,10 @@ export function createPracticeApp(root) {
     form.addEventListener('submit', (event) => {
       event.preventDefault()
       const selectedLessonIds = getSelectedLessonIds(form)
+      state.selectedLessonIds = selectedLessonIds
 
       try {
-        state.activeQueue = buildPracticeQueue(state.lessons, selectedLessonIds)
+        state.activeQueue = buildPracticeQueue(state.lessons, state.selectedLessonIds)
         state.currentIndex = 0
         state.correctAnswers = 0
         state.checkedAnswer = null
@@ -148,7 +151,7 @@ export function createPracticeApp(root) {
 
           ${
             feedback
-              ? `<div class="feedback ${state.checkedAnswer?.correct ? 'correct' : 'incorrect'}" role="status">${escapeHtml(feedback)}</div>`
+              ? `<div class="feedback ${state.checkedAnswer?.correct ? 'correct' : 'incorrect'}" role="${state.checkedAnswer?.correct ? 'status' : 'alert'}">${escapeHtml(feedback)}</div>`
               : ''
           }
 
@@ -235,6 +238,7 @@ export function createPracticeApp(root) {
     `
 
     root.querySelector('[data-action="again"]').addEventListener('click', () => {
+      state.activeQueue = buildPracticeQueue(state.lessons, state.selectedLessonIds)
       state.currentIndex = 0
       state.correctAnswers = 0
       state.checkedAnswer = null
