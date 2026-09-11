@@ -211,8 +211,16 @@ export function createPracticeApp(root) {
     form.addEventListener('submit', (event) => {
       event.preventDefault()
       const formData = new FormData(form)
-      state.selectedLanguagePackId = formData.get('languagePack')
-      state.selectedDirection = formData.get('direction')
+      const selectedLanguagePackId = formData.get('languagePack')
+      const selectedDirection = formData.get('direction')
+      state.selectedLanguagePackId =
+        typeof selectedLanguagePackId === 'string'
+          ? selectedLanguagePackId
+          : state.selectedLanguagePackId
+      state.selectedDirection =
+        selectedDirection === 'target-to-source'
+          ? selectedDirection
+          : 'source-to-target'
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLessonIds = selectedLessonIds
 
