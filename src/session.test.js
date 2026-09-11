@@ -12,12 +12,12 @@ const lessons = [
   {
     id: 'one',
     name: 'Lesson one',
-    words: [{ prompt: 'cat', answer: 'gato' }]
+    words: [{ source: 'cat', target: 'gato' }]
   },
   {
     id: 'two',
     name: 'Lesson two',
-    words: [{ prompt: 'dog', answer: 'perro' }]
+    words: [{ source: ['dog', 'hound'], target: 'perro' }]
   }
 ]
 
@@ -29,19 +29,37 @@ test('isCorrectAnswer ignores casing and surrounding whitespace', () => {
   assert.equal(isCorrectAnswer('  GATO ', 'gato'), true)
 })
 
+test('isCorrectAnswer accepts one of many variants', () => {
+  assert.equal(isCorrectAnswer(' hound ', ['dog', 'hound']), true)
+})
+
 test('buildPracticeQueue combines words from selected lessons', () => {
   assert.deepEqual(buildPracticeQueue(lessons, ['one', 'two']), [
     {
       lessonId: 'one',
       lessonName: 'Lesson one',
       prompt: 'cat',
-      answer: 'gato'
+      answer: 'gato',
+      acceptedAnswers: ['gato']
     },
     {
       lessonId: 'two',
       lessonName: 'Lesson two',
-      prompt: 'dog',
-      answer: 'perro'
+      prompt: 'dog, hound',
+      answer: 'perro',
+      acceptedAnswers: ['perro']
+    }
+  ])
+})
+
+test('buildPracticeQueue can reverse the practice direction', () => {
+  assert.deepEqual(buildPracticeQueue(lessons, ['two'], 'target-to-source'), [
+    {
+      lessonId: 'two',
+      lessonName: 'Lesson two',
+      prompt: 'perro',
+      answer: 'dog',
+      acceptedAnswers: ['dog', 'hound']
     }
   ])
 })

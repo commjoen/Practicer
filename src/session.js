@@ -2,11 +2,45 @@ export function normalizeAnswer(value) {
   return value.trim().replace(/\s+/g, ' ').toLowerCase()
 }
 
-export function isCorrectAnswer(answer, expectedAnswer) {
-  return normalizeAnswer(answer) === normalizeAnswer(expectedAnswer)
+function toVariantArray(value) {
+  if (Array.isArray(value)) {
+    return value
+  }
+
+  return [value]
 }
 
-export function buildPracticeQueue(lessons, selectedLessonIds) {
+export function isCorrectAnswer(answer, expectedAnswer) {
+  const normalizedAnswer = normalizeAnswer(answer)
+  return toVariantArray(expectedAnswer).some(
+    (candidate) => normalizeAnswer(candidate) === normalizedAnswer
+  )
+}
+
+function createWordEntry(word, direction) {
+  const source = toVariantArray(word.source ?? word.prompt)
+  const target = toVariantArray(word.target ?? word.answer)
+
+  if (direction === 'target-to-source') {
+    return {
+      prompt: target.join(', '),
+      answer: source[0],
+      acceptedAnswers: source
+    }
+  }
+
+  return {
+    prompt: source.join(', '),
+    answer: target[0],
+    acceptedAnswers: target
+  }
+}
+
+export function buildPracticeQueue(
+  lessons,
+  selectedLessonIds,
+  direction = 'source-to-target'
+) {
   const selected = lessons.filter(({ id }) => selectedLessonIds.includes(id))
 
   if (selected.length === 0) {
@@ -17,8 +51,7 @@ export function buildPracticeQueue(lessons, selectedLessonIds) {
     lesson.words.map((word) => ({
       lessonId: lesson.id,
       lessonName: lesson.name,
-      prompt: word.prompt,
-      answer: word.answer
+      ...createWordEntry(word, direction)
     }))
   )
 }
