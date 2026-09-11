@@ -7,17 +7,26 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['**/*.js'],
+    files: ['src/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        ...globals.browser,
-        ...globals.node
+        ...globals.browser
       }
     },
     rules: {
       'no-console': ['error', { allow: ['warn'] }]
+    }
+  },
+  {
+    files: ['**/*.test.js', 'eslint.config.js', 'vite.config.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node
+      }
     }
   }
 ]

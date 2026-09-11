@@ -31,12 +31,20 @@ export function createPracticeApp(root) {
   }
 
   function resetSession() {
-    state.selectedLessonIds = []
     state.activeQueue = []
     state.currentIndex = 0
     state.correctAnswers = 0
     state.checkedAnswer = null
     state.submittedAnswer = ''
+  }
+
+  function startPracticeRound() {
+    state.activeQueue = buildPracticeQueue(state.lessons, state.selectedLessonIds)
+    state.currentIndex = 0
+    state.correctAnswers = 0
+    state.checkedAnswer = null
+    state.submittedAnswer = ''
+    renderQuestion()
   }
 
   function renderLessonPicker(message = '') {
@@ -46,7 +54,7 @@ export function createPracticeApp(root) {
       <main class="app-shell">
         <section class="hero-card">
           <p class="eyebrow">GitHub Pages language practice</p>
-          <h1>Practicer</h1>
+          <h1>Practicer Word Play</h1>
           <p class="lead">
             Help kids learn what a word means, then spell it on their own.
             Choose one or more lessons and start a playful spelling round.
@@ -69,7 +77,12 @@ export function createPracticeApp(root) {
                 .map(
                   (lesson) => `
                     <label class="lesson-card">
-                      <input type="checkbox" name="lesson" value="${escapeHtml(lesson.id)}" />
+                      <input
+                        type="checkbox"
+                        name="lesson"
+                        value="${escapeHtml(lesson.id)}"
+                        ${state.selectedLessonIds.includes(lesson.id) ? 'checked' : ''}
+                      />
                       <span>
                         <strong>${escapeHtml(lesson.name)}</strong>
                         <small>${escapeHtml(lesson.description)}</small>
@@ -106,11 +119,7 @@ export function createPracticeApp(root) {
       state.selectedLessonIds = selectedLessonIds
 
       try {
-        state.activeQueue = buildPracticeQueue(state.lessons, state.selectedLessonIds)
-        state.currentIndex = 0
-        state.correctAnswers = 0
-        state.checkedAnswer = null
-        renderQuestion()
+        startPracticeRound()
       } catch (error) {
         renderLessonPicker(error.message)
       }
@@ -238,12 +247,7 @@ export function createPracticeApp(root) {
     `
 
     root.querySelector('[data-action="again"]').addEventListener('click', () => {
-      state.activeQueue = buildPracticeQueue(state.lessons, state.selectedLessonIds)
-      state.currentIndex = 0
-      state.correctAnswers = 0
-      state.checkedAnswer = null
-      state.submittedAnswer = ''
-      renderQuestion()
+      startPracticeRound()
     })
 
     root.querySelector('[data-action="lessons"]').addEventListener('click', () => {

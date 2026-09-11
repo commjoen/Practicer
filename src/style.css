@@ -84,6 +84,11 @@ input {
   margin-top: 0.35rem;
 }
 
+.lesson-card:focus-within {
+  border-color: #7c57f2;
+  box-shadow: 0 0 0 4px rgba(124, 87, 242, 0.18);
+}
+
 .lesson-card span,
 .actions.stacked {
   display: flex;
