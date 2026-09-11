@@ -29,6 +29,10 @@ word, type the matching spelling yourself, and finish with a simple score.
 
 ## Getting started
 
+GitHub Actions are configured to run on Node 26. For local development, use a
+modern Node release supported by the toolchain (Node 20+ works with the current
+dependencies).
+
 ```bash
 npm install
 npm run dev

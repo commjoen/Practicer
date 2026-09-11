@@ -24,6 +24,10 @@ export function buildPracticeQueue(lessons, selectedLessonIds) {
 }
 
 export function createScoreSummary(correctAnswers, totalQuestions) {
+  if (totalQuestions === 0) {
+    return 'Pick a lesson to start your first practice round.'
+  }
+
   const percentage = Math.round((correctAnswers / totalQuestions) * 100)
 
   if (percentage === 100) {

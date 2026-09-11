@@ -5,6 +5,15 @@ import {
   isCorrectAnswer
 } from './session.js'
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
 function getSelectedLessonIds(form) {
   const formData = new FormData(form)
   return formData.getAll('lesson')
@@ -47,8 +56,8 @@ export function createPracticeApp(root) {
             <div>
               <h2>Pick today’s lessons</h2>
               <p>
-                We’ll show the ${lessonData.sourceLanguage.toLowerCase()} meaning and ask for the
-                ${lessonData.targetLanguage} spelling.
+                We’ll show the ${escapeHtml(lessonData.sourceLanguage.toLowerCase())} meaning and ask for the
+                ${escapeHtml(lessonData.targetLanguage)} spelling.
               </p>
             </div>
           </div>
@@ -58,10 +67,10 @@ export function createPracticeApp(root) {
                 .map(
                   (lesson) => `
                     <label class="lesson-card">
-                      <input type="checkbox" name="lesson" value="${lesson.id}" />
+                      <input type="checkbox" name="lesson" value="${escapeHtml(lesson.id)}" />
                       <span>
-                        <strong>${lesson.name}</strong>
-                        <small>${lesson.description}</small>
+                        <strong>${escapeHtml(lesson.name)}</strong>
+                        <small>${escapeHtml(lesson.description)}</small>
                         <em>${lesson.words.length} words</em>
                       </span>
                     </label>
@@ -71,7 +80,7 @@ export function createPracticeApp(root) {
             </div>
             <div class="actions">
               <button type="submit" class="primary-button">Start practice</button>
-              ${message ? `<p class="form-message" role="alert">${message}</p>` : ''}
+              ${message ? `<p class="form-message" role="alert">${escapeHtml(message)}</p>` : ''}
             </div>
           </form>
         </section>
@@ -116,9 +125,9 @@ export function createPracticeApp(root) {
             <button class="ghost-button" type="button" data-action="restart">Change lessons</button>
             <p>Word ${state.currentIndex + 1} of ${state.activeQueue.length}</p>
           </div>
-          <p class="lesson-tag">${question.lessonName}</p>
-          <h1>${question.prompt}</h1>
-          <p class="lead">Type the ${lessonData.targetLanguage} word that matches this meaning.</p>
+          <p class="lesson-tag">${escapeHtml(question.lessonName)}</p>
+          <h1>${escapeHtml(question.prompt)}</h1>
+          <p class="lead">Type the ${escapeHtml(lessonData.targetLanguage)} word that matches this meaning.</p>
 
           <form class="answer-form">
             <label for="answer" class="input-label">Your spelling</label>
@@ -139,7 +148,7 @@ export function createPracticeApp(root) {
 
           ${
             feedback
-              ? `<div class="feedback ${state.checkedAnswer?.correct ? 'correct' : 'incorrect'}" role="status">${feedback}</div>`
+              ? `<div class="feedback ${state.checkedAnswer?.correct ? 'correct' : 'incorrect'}" role="status">${escapeHtml(feedback)}</div>`
               : ''
           }
 

@@ -56,3 +56,24 @@ test('buildPracticeQueue requires at least one lesson', () => {
 test('createScoreSummary returns a friendly score message', () => {
   assert.match(createScoreSummary(2, 3), /Great job! 2\/3 words correct\./)
 })
+
+test('createScoreSummary celebrates a perfect score', () => {
+  assert.match(
+    createScoreSummary(3, 3),
+    /Perfect score! 3\/3 words correct\./
+  )
+})
+
+test('createScoreSummary encourages more practice for lower scores', () => {
+  assert.match(
+    createScoreSummary(1, 3),
+    /Nice try! 1\/3 words correct\. Practice again to improve\./
+  )
+})
+
+test('createScoreSummary handles zero questions', () => {
+  assert.match(
+    createScoreSummary(0, 0),
+    /Pick a lesson to start your first practice round\./
+  )
+})
