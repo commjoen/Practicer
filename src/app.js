@@ -42,6 +42,10 @@ export function createPracticeApp(root) {
 
   function startPracticeRound() {
     const activePack = getActiveLanguagePack()
+    if (!activePack) {
+      throw new Error('No language packs are available yet.')
+    }
+
     state.activeQueue = buildPracticeQueue(
       activePack.lessons,
       state.selectedLessonIds,
@@ -63,6 +67,12 @@ export function createPracticeApp(root) {
 
   function getDirectionLabels() {
     const activePack = getActiveLanguagePack()
+    if (!activePack) {
+      return {
+        promptLanguage: 'source',
+        answerLanguage: 'target'
+      }
+    }
 
     if (state.selectedDirection === 'target-to-source') {
       return {
@@ -80,6 +90,18 @@ export function createPracticeApp(root) {
   function renderLessonPicker(message = '') {
     resetSession()
     const activePack = getActiveLanguagePack()
+    if (!activePack) {
+      root.innerHTML = `
+        <main class="app-shell">
+          <section class="panel">
+            <h2>No lessons available</h2>
+            <p class="lead">Add at least one language pack to start practicing.</p>
+          </section>
+        </main>
+      `
+      return
+    }
+
     const directionLabels = getDirectionLabels()
 
     root.innerHTML = `
