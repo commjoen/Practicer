@@ -1,0 +1,36 @@
+{
+  "sourceLanguage": "English",
+  "targetLanguage": "Spanish",
+  "lessons": [
+    {
+      "id": "animals",
+      "name": "Friendly animals",
+      "description": "Recognise common animals and spell their Spanish names.",
+      "words": [
+        { "prompt": "cat", "answer": "gato" },
+        { "prompt": "dog", "answer": "perro" },
+        { "prompt": "bird", "answer": "pájaro" }
+      ]
+    },
+    {
+      "id": "colors",
+      "name": "Bright colors",
+      "description": "Match everyday colors to the right spelling.",
+      "words": [
+        { "prompt": "red", "answer": "rojo" },
+        { "prompt": "blue", "answer": "azul" },
+        { "prompt": "green", "answer": "verde" }
+      ]
+    },
+    {
+      "id": "food",
+      "name": "Tasty food",
+      "description": "Practice snack-time words and spell them yourself.",
+      "words": [
+        { "prompt": "bread", "answer": "pan" },
+        { "prompt": "apple", "answer": "manzana" },
+        { "prompt": "milk", "answer": "leche" }
+      ]
+    }
+  ]
+}
