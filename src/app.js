@@ -87,7 +87,7 @@ export function createPracticeApp(root) {
     }
   }
 
-  function renderLessonPicker(message = '') {
+  function renderLessonPicker(message = '', focusSelector = '') {
     resetSession()
     const activePack = getActiveLanguagePack()
     if (!activePack) {
@@ -198,13 +198,17 @@ export function createPracticeApp(root) {
     languagePackSelect.addEventListener('change', () => {
       state.selectedLanguagePackId = languagePackSelect.value
       state.selectedLessonIds = []
-      renderLessonPicker(message)
+      renderLessonPicker(message, '#languagePack')
     })
 
     directionInputs.forEach((input) => {
       input.addEventListener('change', () => {
+        state.selectedLessonIds = getSelectedLessonIds(form)
         state.selectedDirection = input.value
-        renderLessonPicker(message)
+        renderLessonPicker(
+          message,
+          `input[name="direction"][value="${state.selectedDirection}"]`
+        )
       })
     })
 
@@ -230,6 +234,10 @@ export function createPracticeApp(root) {
         renderLessonPicker(error.message)
       }
     })
+
+    if (focusSelector) {
+      root.querySelector(focusSelector)?.focus()
+    }
   }
 
   function renderQuestion(feedback = '') {
