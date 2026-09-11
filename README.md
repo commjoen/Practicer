@@ -1,8 +1,13 @@
 # Practicer
 
+[![CI](https://github.com/commjoen/Practicer/actions/workflows/ci.yml/badge.svg)](https://github.com/commjoen/Practicer/actions/workflows/ci.yml)
+[![Deploy GitHub Pages](https://github.com/commjoen/Practicer/actions/workflows/pages.yml/badge.svg)](https://github.com/commjoen/Practicer/actions/workflows/pages.yml)
+
 Practicer is a cheerful little web app for GitHub Pages that helps kids learn
 vocabulary in another language. Pick one or more lessons, read the meaning of a
 word, type the matching spelling yourself, and finish with a simple score.
+
+GitHub Pages URL: https://commjoen.github.io/Practicer/
 
 ## What the first version does
 
