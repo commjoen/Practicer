@@ -65,7 +65,7 @@ Each lesson has:
 - an `id`
 - a `name`
 - a `description`
-- a `words` array with `source` and `target` pairs (`source` can be an array for accepted alternatives)
+- a `words` array with `source` and `target` pairs (either side can be a string or an array for accepted alternatives)
 
 ## Automation included
 
