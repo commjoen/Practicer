@@ -2,6 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "enabledManagers": ["npm", "github-actions"],
+  "onboarding": false,
+  "requireConfig": "optional",
   "timezone": "UTC",
   "schedule": ["before 6am on Monday"],
   "labels": ["dependencies"]
