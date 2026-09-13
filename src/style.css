@@ -14,6 +14,18 @@
   box-sizing: border-box;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -91,16 +103,22 @@ select {
 
 .lesson-card {
   display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.9rem;
   padding: 1rem;
   border-radius: 18px;
   border: 2px solid #d9e7fb;
   background: #f8fbff;
+}
+
+.lesson-select {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
   cursor: pointer;
 }
 
-.lesson-card input {
+.lesson-select input {
   margin-top: 0.35rem;
 }
 
@@ -109,7 +127,7 @@ select {
   box-shadow: 0 0 0 4px rgba(124, 87, 242, 0.18);
 }
 
-.lesson-card span,
+.lesson-select span,
 .actions.stacked {
   display: flex;
   flex-direction: column;
@@ -172,6 +190,10 @@ h2 {
   margin-top: 1.5rem;
 }
 
+.view-word-button {
+  align-self: flex-start;
+}
+
 .input-label {
   display: block;
   margin-bottom: 0.5rem;
@@ -203,10 +225,46 @@ h2 {
   color: #a33434;
 }
 
+.preview-meta {
+  margin: 1rem 0 0;
+  color: #4c647b;
+  font-weight: 600;
+}
+
+.word-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.word-preview-table th,
+.word-preview-table td {
+  text-align: left;
+  padding: 0.8rem;
+  border-bottom: 1px solid #d9e7fb;
+}
+
+.word-preview-table th {
+  color: #10263b;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pagination-controls p {
+  color: #4c647b;
+  margin: 0;
+}
+
 @media (max-width: 640px) {
   .panel-heading,
   .progress-row,
-  .actions {
+  .actions,
+  .pagination-controls {
     flex-direction: column;
     align-items: stretch;
   }
