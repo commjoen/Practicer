@@ -5,6 +5,8 @@ import {
   isCorrectAnswer
 } from './session.js'
 
+const WORDS_PER_PAGE = 5
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -17,6 +19,14 @@ function escapeHtml(value) {
 function getSelectedLessonIds(form) {
   const formData = new FormData(form)
   return formData.getAll('lesson')
+}
+
+function toDisplayArray(value, fallback = '') {
+  if (Array.isArray(value)) {
+    return value
+  }
+
+  return [value ?? fallback]
 }
 
 export function createPracticeApp(root) {
@@ -85,6 +95,87 @@ export function createPracticeApp(root) {
       promptLanguage: activePack.sourceLanguage,
       answerLanguage: activePack.targetLanguage
     }
+  }
+
+  function renderLessonWordPreview(lessonId, page = 0) {
+    resetSession()
+    const activePack = getActiveLanguagePack()
+    if (!activePack) {
+      renderLessonPicker('No lessons available yet.')
+      return
+    }
+
+    const lesson = activePack.lessons.find((item) => item.id === lessonId)
+    if (!lesson) {
+      renderLessonPicker('Lesson not found.')
+      return
+    }
+
+    const totalWords = lesson.words.length
+    const totalPages = Math.max(1, Math.ceil(totalWords / WORDS_PER_PAGE))
+    const currentPage = Math.min(Math.max(page, 0), totalPages - 1)
+    const startIndex = currentPage * WORDS_PER_PAGE
+    const pageWords = lesson.words.slice(startIndex, startIndex + WORDS_PER_PAGE)
+
+    root.innerHTML = `
+      <main class="app-shell">
+        <section class="panel">
+          <div class="progress-row">
+            <button class="ghost-button" type="button" data-action="back-to-lessons">Back to lessons</button>
+            <p>${escapeHtml(lesson.name)}</p>
+          </div>
+          <h1>Lesson words</h1>
+          <p class="lead">${escapeHtml(lesson.description)}</p>
+          <p class="preview-meta">Showing ${startIndex + 1}-${Math.min(startIndex + WORDS_PER_PAGE, totalWords)} of ${totalWords} words</p>
+
+          <table class="word-preview-table">
+            <thead>
+              <tr>
+                <th>${escapeHtml(activePack.sourceLanguage)}</th>
+                <th>${escapeHtml(activePack.targetLanguage)}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pageWords
+                .map((word) => {
+                  const source = toDisplayArray(word.source, word.prompt).join(', ')
+                  const target = toDisplayArray(word.target, word.answer).join(', ')
+
+                  return `
+                    <tr>
+                      <td>${escapeHtml(source)}</td>
+                      <td>${escapeHtml(target)}</td>
+                    </tr>
+                  `
+                })
+                .join('')}
+            </tbody>
+          </table>
+
+          <div class="pagination-controls">
+            <button type="button" class="ghost-button" data-action="previous-page" ${currentPage === 0 ? 'disabled' : ''}>
+              Previous
+            </button>
+            <p>Page ${currentPage + 1} of ${totalPages}</p>
+            <button type="button" class="ghost-button" data-action="next-page" ${currentPage === totalPages - 1 ? 'disabled' : ''}>
+              Next
+            </button>
+          </div>
+        </section>
+      </main>
+    `
+
+    root.querySelector('[data-action="back-to-lessons"]').addEventListener('click', () => {
+      renderLessonPicker('', `[data-action="view-lesson"][data-lesson-id="${lesson.id}"]`)
+    })
+
+    root.querySelector('[data-action="previous-page"]')?.addEventListener('click', () => {
+      renderLessonWordPreview(lesson.id, currentPage - 1)
+    })
+
+    root.querySelector('[data-action="next-page"]')?.addEventListener('click', () => {
+      renderLessonWordPreview(lesson.id, currentPage + 1)
+    })
   }
 
   function renderLessonPicker(message = '', focusSelector = '') {
@@ -165,19 +256,29 @@ export function createPracticeApp(root) {
               ${activePack.lessons
                 .map(
                   (lesson) => `
-                    <label class="lesson-card">
-                      <input
-                        type="checkbox"
-                        name="lesson"
-                        value="${escapeHtml(lesson.id)}"
-                        ${state.selectedLessonIds.includes(lesson.id) ? 'checked' : ''}
-                      />
-                      <span>
-                        <strong>${escapeHtml(lesson.name)}</strong>
-                        <small>${escapeHtml(lesson.description)}</small>
-                        <em>${lesson.words.length} words</em>
-                      </span>
-                    </label>
+                    <article class="lesson-card">
+                      <label class="lesson-select">
+                        <input
+                          type="checkbox"
+                          name="lesson"
+                          value="${escapeHtml(lesson.id)}"
+                          ${state.selectedLessonIds.includes(lesson.id) ? 'checked' : ''}
+                        />
+                        <span>
+                          <strong>${escapeHtml(lesson.name)}</strong>
+                          <small>${escapeHtml(lesson.description)}</small>
+                          <em>${lesson.words.length} words</em>
+                        </span>
+                      </label>
+                      <button
+                        type="button"
+                        class="ghost-button view-word-button"
+                        data-action="view-lesson"
+                        data-lesson-id="${escapeHtml(lesson.id)}"
+                      >
+                        View words
+                      </button>
+                    </article>
                   `
                 )
                 .join('')}
@@ -194,6 +295,7 @@ export function createPracticeApp(root) {
     const form = root.querySelector('.lesson-form')
     const languagePackSelect = root.querySelector('#languagePack')
     const directionInputs = root.querySelectorAll('input[name="direction"]')
+    const viewLessonButtons = root.querySelectorAll('[data-action="view-lesson"]')
 
     languagePackSelect.addEventListener('change', () => {
       const selectedLessonIds = getSelectedLessonIds(form)
@@ -214,6 +316,14 @@ export function createPracticeApp(root) {
           message,
           `input[name="direction"][value="${state.selectedDirection}"]`
         )
+      })
+    })
+
+    viewLessonButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        state.selectedLessonIds = getSelectedLessonIds(form)
+        const lessonId = button.dataset.lessonId
+        renderLessonWordPreview(lessonId)
       })
     })
 
