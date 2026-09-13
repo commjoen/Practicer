@@ -21,12 +21,24 @@ function getSelectedLessonIds(form) {
   return formData.getAll('lesson')
 }
 
-function toDisplayArray(value, fallback = '') {
+function toDisplayArray(value) {
   if (Array.isArray(value)) {
     return value
   }
 
-  return [value ?? fallback]
+  if (value === undefined || value === null) {
+    return []
+  }
+
+  return [value]
+}
+
+function combineWordValues(primary, secondary) {
+  const values = [...toDisplayArray(primary), ...toDisplayArray(secondary)]
+    .map((value) => String(value).trim())
+    .filter(Boolean)
+
+  return [...new Set(values)]
 }
 
 export function createPracticeApp(root) {
@@ -116,6 +128,11 @@ export function createPracticeApp(root) {
     const currentPage = Math.min(Math.max(page, 0), totalPages - 1)
     const startIndex = currentPage * WORDS_PER_PAGE
     const pageWords = lesson.words.slice(startIndex, startIndex + WORDS_PER_PAGE)
+    const hasWords = totalWords > 0
+    const rangeStart = hasWords ? startIndex + 1 : 0
+    const rangeEnd = hasWords
+      ? Math.min(startIndex + WORDS_PER_PAGE, totalWords)
+      : 0
 
     root.innerHTML = `
       <main class="app-shell">
@@ -126,29 +143,40 @@ export function createPracticeApp(root) {
           </div>
           <h1>Lesson words</h1>
           <p class="lead">${escapeHtml(lesson.description)}</p>
-          <p class="preview-meta">Showing ${startIndex + 1}-${Math.min(startIndex + WORDS_PER_PAGE, totalWords)} of ${totalWords} words</p>
+          <p class="preview-meta">Showing ${rangeStart}-${rangeEnd} of ${totalWords} words</p>
 
           <table class="word-preview-table">
+            <caption class="sr-only">
+              ${escapeHtml(lesson.name)} words in ${escapeHtml(activePack.sourceLanguage)} and ${escapeHtml(activePack.targetLanguage)}
+            </caption>
             <thead>
               <tr>
-                <th>${escapeHtml(activePack.sourceLanguage)}</th>
-                <th>${escapeHtml(activePack.targetLanguage)}</th>
+                <th scope="col">${escapeHtml(activePack.sourceLanguage)}</th>
+                <th scope="col">${escapeHtml(activePack.targetLanguage)}</th>
               </tr>
             </thead>
             <tbody>
-              ${pageWords
-                .map((word) => {
-                  const source = toDisplayArray(word.source, word.prompt).join(', ')
-                  const target = toDisplayArray(word.target, word.answer).join(', ')
+              ${
+                hasWords
+                  ? pageWords
+                    .map((word) => {
+                      const source = combineWordValues(word.source, word.prompt).join(', ')
+                      const target = combineWordValues(word.target, word.answer).join(', ')
 
-                  return `
+                      return `
+                        <tr>
+                          <td>${escapeHtml(source)}</td>
+                          <td>${escapeHtml(target)}</td>
+                        </tr>
+                      `
+                    })
+                    .join('')
+                  : `
                     <tr>
-                      <td>${escapeHtml(source)}</td>
-                      <td>${escapeHtml(target)}</td>
+                      <td colspan="2">No words in this lesson yet.</td>
                     </tr>
                   `
-                })
-                .join('')}
+              }
             </tbody>
           </table>
 
@@ -166,7 +194,7 @@ export function createPracticeApp(root) {
     `
 
     root.querySelector('[data-action="back-to-lessons"]').addEventListener('click', () => {
-      renderLessonPicker('', `[data-action="view-lesson"][data-lesson-id="${lesson.id}"]`)
+      renderLessonPicker('', '', lesson.id)
     })
 
     root.querySelector('[data-action="previous-page"]')?.addEventListener('click', () => {
@@ -178,7 +206,7 @@ export function createPracticeApp(root) {
     })
   }
 
-  function renderLessonPicker(message = '', focusSelector = '') {
+  function renderLessonPicker(message = '', focusSelector = '', focusLessonId = '') {
     resetSession()
     const activePack = getActiveLanguagePack()
     if (!activePack) {
@@ -349,6 +377,14 @@ export function createPracticeApp(root) {
         renderLessonPicker(error.message)
       }
     })
+
+    if (focusLessonId) {
+      const focusTarget = [...viewLessonButtons].find(
+        (button) => button.dataset.lessonId === focusLessonId
+      )
+      focusTarget?.focus()
+      return
+    }
 
     if (focusSelector) {
       root.querySelector(focusSelector)?.focus()
