@@ -254,11 +254,14 @@ export function createPracticeApp(root) {
               Previous
             </button>
             <p>Page ${currentPage + 1} of ${totalPages}</p>
-            ${
-              hasNextPage
-                ? `<button type="button" class="ghost-button" data-action="next-page">Next</button>`
-                : '<span aria-hidden="true"></span>'
-            }
+            <button
+              type="button"
+              class="ghost-button"
+              data-action="next-page"
+              ${hasNextPage ? '' : 'disabled aria-label="No next page"'}
+            >
+              ${hasNextPage ? 'Next' : ''}
+            </button>
           </div>
         </section>
       </main>
@@ -410,6 +413,7 @@ export function createPracticeApp(root) {
       state.selectedLessonIds = selectedLessonIds.filter((id) =>
         nextLessonIds.has(id)
       )
+      syncUrlState()
       renderLessonPicker(message, '#languagePack')
     })
 
@@ -417,6 +421,7 @@ export function createPracticeApp(root) {
       input.addEventListener('change', () => {
         state.selectedLessonIds = getSelectedLessonIds(form)
         state.selectedDirection = input.value
+        syncUrlState()
         renderLessonPicker(
           message,
           `input[name="direction"][value="${state.selectedDirection}"]`
