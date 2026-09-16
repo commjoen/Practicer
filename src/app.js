@@ -615,9 +615,17 @@ export function createPracticeApp(root) {
   }
   state.selectedDirection = normalizeDirection(shortcuts.direction)
   state.selectedLessonIds = filterLessonIdsForActivePack(shortcuts.selectedLessonIds)
+  const shortcutLessonExists = getActiveLanguagePack()?.lessons.some(
+    (lesson) => lesson.id === shortcuts.lessonId
+  )
+
+  if (shortcuts.lessonId && shortcutLessonExists) {
+    renderLessonWordPreview(shortcuts.lessonId, shortcuts.lessonPage)
+    return
+  }
 
   if (shortcuts.lessonId) {
-    renderLessonWordPreview(shortcuts.lessonId, shortcuts.lessonPage)
+    renderLessonPicker('Lesson not found.')
     return
   }
 

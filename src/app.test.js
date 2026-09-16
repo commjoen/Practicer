@@ -42,3 +42,15 @@ test('buildShortcutSearch writes preview shortcuts', () => {
     '?pack=spanish-english&direction=source-to-target&lessons=animals&lesson=animals&page=2'
   )
 })
+
+test('buildShortcutSearch writes practice shortcuts', () => {
+  assert.equal(
+    buildShortcutSearch({
+      languagePackId: 'dutch-english',
+      direction: 'target-to-source',
+      selectedLessonIds: ['dutch-lesson-1'],
+      startPractice: true
+    }),
+    '?pack=dutch-english&direction=target-to-source&lessons=dutch-lesson-1&practice=1'
+  )
+})
