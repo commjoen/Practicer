@@ -65,3 +65,30 @@ export function buildShortcutSearch({
   const query = params.toString()
   return query ? `?${query}` : ''
 }
+
+export function resolveShortcutAction({
+  requestedPackId = '',
+  hasValidRequestedPack = true,
+  lessonId = '',
+  lessonExistsInPack = false,
+  startPractice = false,
+  selectedLessonIds = []
+} = {}) {
+  if (lessonId) {
+    if ((!requestedPackId || hasValidRequestedPack) && lessonExistsInPack) {
+      return { type: 'preview' }
+    }
+
+    return { type: 'picker', message: 'Lesson not found.' }
+  }
+
+  if (startPractice && selectedLessonIds.length > 0) {
+    return { type: 'practice' }
+  }
+
+  if (startPractice) {
+    return { type: 'picker', message: 'Select at least one lesson to start practicing.' }
+  }
+
+  return { type: 'picker' }
+}

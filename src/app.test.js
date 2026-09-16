@@ -1,7 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildShortcutSearch, parseShortcutParams } from './url-state.js'
+import {
+  buildShortcutSearch,
+  parseShortcutParams,
+  resolveShortcutAction
+} from './url-state.js'
 
 test('parseShortcutParams reads practice shortcuts from query params', () => {
   assert.deepEqual(
@@ -52,5 +56,27 @@ test('buildShortcutSearch writes practice shortcuts', () => {
       startPractice: true
     }),
     '?pack=dutch-english&direction=target-to-source&lessons=dutch-lesson-1&practice=1'
+  )
+})
+
+test('resolveShortcutAction requires explicit lessons for practice shortcuts', () => {
+  assert.deepEqual(
+    resolveShortcutAction({ startPractice: true, selectedLessonIds: [] }),
+    {
+      type: 'picker',
+      message: 'Select at least one lesson to start practicing.'
+    }
+  )
+})
+
+test('resolveShortcutAction rejects preview shortcut with invalid requested pack', () => {
+  assert.deepEqual(
+    resolveShortcutAction({
+      requestedPackId: 'missing-pack',
+      hasValidRequestedPack: false,
+      lessonId: 'animals',
+      lessonExistsInPack: true
+    }),
+    { type: 'picker', message: 'Lesson not found.' }
   )
 })

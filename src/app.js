@@ -1,4 +1,4 @@
-import lessonData from './data/lessons.json'
+import lessonData from './data/lessons.json' with { type: 'json' }
 import {
   buildPracticeQueue,
   createScoreSummary,
@@ -7,7 +7,8 @@ import {
 import {
   buildShortcutSearch,
   normalizeDirection,
-  parseShortcutParams
+  parseShortcutParams,
+  resolveShortcutAction
 } from './url-state.js'
 
 const WORDS_PER_PAGE = 5
@@ -607,40 +608,36 @@ export function createPracticeApp(root) {
   const shortcuts = parseShortcutParams(
     typeof window === 'undefined' ? '' : window.location.search
   )
-  if (
-    shortcuts.languagePackId &&
+  const hasRequestedPack = Boolean(shortcuts.languagePackId)
+  const hasValidShortcutPack =
+    !hasRequestedPack ||
     state.languagePacks.some((pack) => pack.id === shortcuts.languagePackId)
-  ) {
+  if (hasRequestedPack && hasValidShortcutPack) {
     state.selectedLanguagePackId = shortcuts.languagePackId
   }
   state.selectedDirection = normalizeDirection(shortcuts.direction)
   state.selectedLessonIds = filterLessonIdsForActivePack(shortcuts.selectedLessonIds)
-  if (shortcuts.startPractice && state.selectedLessonIds.length === 0) {
-    state.selectedLessonIds = getActiveLanguagePack()?.lessons.map((lesson) => lesson.id) ?? []
-  }
   const shortcutLessonExists = getActiveLanguagePack()?.lessons.some(
     (lesson) => lesson.id === shortcuts.lessonId
   )
+  const shortcutAction = resolveShortcutAction({
+    requestedPackId: shortcuts.languagePackId,
+    hasValidRequestedPack: hasValidShortcutPack,
+    lessonId: shortcuts.lessonId,
+    lessonExistsInPack: shortcutLessonExists,
+    startPractice: shortcuts.startPractice,
+    selectedLessonIds: state.selectedLessonIds
+  })
 
-  if (shortcuts.lessonId && shortcutLessonExists) {
+  if (shortcutAction.type === 'preview') {
     renderLessonWordPreview(shortcuts.lessonId, shortcuts.lessonPage)
     return
   }
 
-  if (shortcuts.lessonId) {
-    renderLessonPicker('Lesson not found.')
+  if (shortcutAction.type === 'practice') {
+    startPracticeRound()
     return
   }
 
-  if (shortcuts.startPractice && state.selectedLessonIds.length > 0) {
-    try {
-      startPracticeRound()
-      return
-    } catch (error) {
-      renderLessonPicker(error.message)
-      return
-    }
-  }
-
-  renderLessonPicker()
+  renderLessonPicker(shortcutAction.message ?? '')
 }
