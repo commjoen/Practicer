@@ -1,11 +1,42 @@
-import lessonData from './data/lessons.json'
+import lessonData from './data/lessons.json' with { type: 'json' }
 import {
   buildPracticeQueue,
   createScoreSummary,
   isCorrectAnswer
 } from './session.js'
+import {
+  buildShortcutSearch,
+  normalizeDirection,
+  parseShortcutParams,
+  resolveShortcutAction
+} from './url-state.js'
 
 const WORDS_PER_PAGE = 5
+const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
+
+function getRememberedLanguagePackId() {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  try {
+    return window.localStorage.getItem(LAST_LANGUAGE_PACK_STORAGE_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function rememberLanguagePackId(languagePackId) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(LAST_LANGUAGE_PACK_STORAGE_KEY, languagePackId)
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -42,9 +73,16 @@ function combineWordValues(primary, secondary) {
 }
 
 export function createPracticeApp(root) {
+  const rememberedLanguagePackId = getRememberedLanguagePackId()
+  const hasRememberedLanguagePack = lessonData.languagePacks.some(
+    (pack) => pack.id === rememberedLanguagePackId
+  )
+
   const state = {
     languagePacks: lessonData.languagePacks,
-    selectedLanguagePackId: lessonData.languagePacks[0]?.id ?? '',
+    selectedLanguagePackId: hasRememberedLanguagePack
+      ? rememberedLanguagePackId
+      : (lessonData.languagePacks[0]?.id ?? ''),
     selectedDirection: 'source-to-target',
     selectedLessonIds: [],
     activeQueue: [],
@@ -68,6 +106,8 @@ export function createPracticeApp(root) {
       throw new Error('No language packs are available yet.')
     }
 
+    rememberLanguagePackId(activePack.id)
+
     state.activeQueue = buildPracticeQueue(
       activePack.lessons,
       state.selectedLessonIds,
@@ -77,6 +117,7 @@ export function createPracticeApp(root) {
     state.correctAnswers = 0
     state.checkedAnswer = null
     state.submittedAnswer = ''
+    syncUrlState({ startPractice: true })
     renderQuestion()
   }
 
@@ -109,6 +150,33 @@ export function createPracticeApp(root) {
     }
   }
 
+  function filterLessonIdsForActivePack(selectedLessonIds) {
+    const activePack = getActiveLanguagePack()
+    const validLessonIds = new Set(activePack?.lessons.map((lesson) => lesson.id))
+    return selectedLessonIds.filter((lessonId) => validLessonIds.has(lessonId))
+  }
+
+  function syncUrlState({
+    lessonId = '',
+    lessonPage = 0,
+    startPractice = false
+  } = {}) {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const nextSearch = buildShortcutSearch({
+      languagePackId: state.selectedLanguagePackId,
+      direction: state.selectedDirection,
+      selectedLessonIds: state.selectedLessonIds,
+      lessonId,
+      lessonPage,
+      startPractice
+    })
+    const nextUrl = `${window.location.pathname}${nextSearch}`
+    window.history.replaceState(null, '', nextUrl)
+  }
+
   function renderLessonWordPreview(lessonId, page = 0) {
     resetSession()
     const activePack = getActiveLanguagePack()
@@ -133,6 +201,7 @@ export function createPracticeApp(root) {
     const rangeEnd = hasWords
       ? Math.min(startIndex + WORDS_PER_PAGE, totalWords)
       : 0
+    const hasNextPage = currentPage < totalPages - 1
 
     root.innerHTML = `
       <main class="app-shell">
@@ -185,13 +254,20 @@ export function createPracticeApp(root) {
               Previous
             </button>
             <p>Page ${currentPage + 1} of ${totalPages}</p>
-            <button type="button" class="ghost-button" data-action="next-page" ${currentPage === totalPages - 1 ? 'disabled' : ''}>
+            <button
+              type="button"
+              class="ghost-button"
+              data-action="next-page"
+              ${hasNextPage ? '' : 'disabled aria-label="No next page"'}
+            >
               Next
             </button>
           </div>
         </section>
       </main>
     `
+
+    syncUrlState({ lessonId: lesson.id, lessonPage: currentPage })
 
     root.querySelector('[data-action="back-to-lessons"]').addEventListener('click', () => {
       renderLessonPicker('', '', lesson.id)
@@ -218,6 +294,8 @@ export function createPracticeApp(root) {
           </section>
         </main>
       `
+
+      syncUrlState()
       return
     }
 
@@ -320,6 +398,8 @@ export function createPracticeApp(root) {
       </main>
     `
 
+    syncUrlState()
+
     const form = root.querySelector('.lesson-form')
     const languagePackSelect = root.querySelector('#languagePack')
     const directionInputs = root.querySelectorAll('input[name="direction"]')
@@ -333,6 +413,7 @@ export function createPracticeApp(root) {
       state.selectedLessonIds = selectedLessonIds.filter((id) =>
         nextLessonIds.has(id)
       )
+      syncUrlState()
       renderLessonPicker(message, '#languagePack')
     })
 
@@ -340,6 +421,7 @@ export function createPracticeApp(root) {
       input.addEventListener('change', () => {
         state.selectedLessonIds = getSelectedLessonIds(form)
         state.selectedDirection = input.value
+        syncUrlState()
         renderLessonPicker(
           message,
           `input[name="direction"][value="${state.selectedDirection}"]`
@@ -375,6 +457,13 @@ export function createPracticeApp(root) {
         startPracticeRound()
       } catch (error) {
         renderLessonPicker(error.message)
+      }
+    })
+
+    form.addEventListener('change', (event) => {
+      if (event.target instanceof HTMLInputElement && event.target.name === 'lesson') {
+        state.selectedLessonIds = getSelectedLessonIds(form)
+        syncUrlState()
       }
     })
 
@@ -521,5 +610,39 @@ export function createPracticeApp(root) {
     })
   }
 
-  renderLessonPicker()
+  const shortcuts = parseShortcutParams(
+    typeof window === 'undefined' ? '' : window.location.search
+  )
+  const hasRequestedPack = Boolean(shortcuts.languagePackId)
+  const hasValidShortcutPack =
+    !hasRequestedPack ||
+    state.languagePacks.some((pack) => pack.id === shortcuts.languagePackId)
+  if (hasRequestedPack && hasValidShortcutPack) {
+    state.selectedLanguagePackId = shortcuts.languagePackId
+  }
+  state.selectedDirection = normalizeDirection(shortcuts.direction)
+  state.selectedLessonIds = filterLessonIdsForActivePack(shortcuts.selectedLessonIds)
+  const shortcutLessonExists = getActiveLanguagePack()?.lessons.some(
+    (lesson) => lesson.id === shortcuts.lessonId
+  )
+  const shortcutAction = resolveShortcutAction({
+    requestedPackId: shortcuts.languagePackId,
+    hasValidRequestedPack: hasValidShortcutPack,
+    lessonId: shortcuts.lessonId,
+    lessonExistsInPack: shortcutLessonExists,
+    startPractice: shortcuts.startPractice,
+    selectedLessonIds: state.selectedLessonIds
+  })
+
+  if (shortcutAction.type === 'preview') {
+    renderLessonWordPreview(shortcuts.lessonId, shortcuts.lessonPage)
+    return
+  }
+
+  if (shortcutAction.type === 'practice') {
+    startPracticeRound()
+    return
+  }
+
+  renderLessonPicker(shortcutAction.message ?? '')
 }
