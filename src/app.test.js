@@ -1,0 +1,44 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+
+import { buildShortcutSearch, parseShortcutParams } from './url-state.js'
+
+test('parseShortcutParams reads practice shortcuts from query params', () => {
+  assert.deepEqual(
+    parseShortcutParams(
+      '?pack=dutch-english&direction=target-to-source&lessons=one,two&practice=1'
+    ),
+    {
+      languagePackId: 'dutch-english',
+      direction: 'target-to-source',
+      selectedLessonIds: ['one', 'two'],
+      lessonId: '',
+      lessonPage: 0,
+      startPractice: true
+    }
+  )
+})
+
+test('parseShortcutParams normalizes invalid direction and page values', () => {
+  assert.deepEqual(parseShortcutParams('?direction=invalid&page=0'), {
+    languagePackId: '',
+    direction: 'source-to-target',
+    selectedLessonIds: [],
+    lessonId: '',
+    lessonPage: 0,
+    startPractice: false
+  })
+})
+
+test('buildShortcutSearch writes preview shortcuts', () => {
+  assert.equal(
+    buildShortcutSearch({
+      languagePackId: 'spanish-english',
+      direction: 'source-to-target',
+      selectedLessonIds: ['animals'],
+      lessonId: 'animals',
+      lessonPage: 1
+    }),
+    '?pack=spanish-english&direction=source-to-target&lessons=animals&lesson=animals&page=2'
+  )
+})

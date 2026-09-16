@@ -13,6 +13,7 @@ GitHub Pages URL: https://commjoen.github.io/Practicer/
 
 - Loads lesson content from a JSON file
 - Supports multiple language packs
+- Remembers the last practiced language pack
 - Lets learners select one or more lessons before starting
 - Lets learners practice in both language directions
 - Gives instant feedback after every answer
@@ -68,6 +69,11 @@ Each lesson has:
 - a `words` array with `source` and `target` pairs (either side can be a string or an array for accepted alternatives)
 
 Lesson `id` values are selected within the active language pack, so keep them unique per pack.
+
+## URL shortcuts
+
+- `?pack=dutch-english&direction=source-to-target&lessons=dutch-lesson-1&practice=1` opens a practice round directly.
+- `?pack=dutch-english&lesson=dutch-lesson-1&page=2` opens a lesson word preview on a specific page.
 
 ## Automation included
 
