@@ -615,6 +615,9 @@ export function createPracticeApp(root) {
   }
   state.selectedDirection = normalizeDirection(shortcuts.direction)
   state.selectedLessonIds = filterLessonIdsForActivePack(shortcuts.selectedLessonIds)
+  if (shortcuts.startPractice && state.selectedLessonIds.length === 0) {
+    state.selectedLessonIds = getActiveLanguagePack()?.lessons.map((lesson) => lesson.id) ?? []
+  }
   const shortcutLessonExists = getActiveLanguagePack()?.lessons.some(
     (lesson) => lesson.id === shortcuts.lessonId
   )
