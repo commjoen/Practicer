@@ -74,8 +74,15 @@ export function resolveShortcutAction({
   startPractice = false,
   selectedLessonIds = []
 } = {}) {
+  if (requestedPackId && !hasValidRequestedPack) {
+    return {
+      type: 'picker',
+      message: startPractice ? 'Language pack not found.' : 'Lesson not found.'
+    }
+  }
+
   if (lessonId) {
-    if ((!requestedPackId || hasValidRequestedPack) && lessonExistsInPack) {
+    if (lessonExistsInPack) {
       return { type: 'preview' }
     }
 

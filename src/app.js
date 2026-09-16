@@ -260,7 +260,7 @@ export function createPracticeApp(root) {
               data-action="next-page"
               ${hasNextPage ? '' : 'disabled aria-label="No next page"'}
             >
-              ${hasNextPage ? 'Next' : ''}
+              Next
             </button>
           </div>
         </section>

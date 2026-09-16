@@ -80,3 +80,15 @@ test('resolveShortcutAction rejects preview shortcut with invalid requested pack
     { type: 'picker', message: 'Lesson not found.' }
   )
 })
+
+test('resolveShortcutAction rejects practice shortcut with invalid requested pack', () => {
+  assert.deepEqual(
+    resolveShortcutAction({
+      requestedPackId: 'missing-pack',
+      hasValidRequestedPack: false,
+      startPractice: true,
+      selectedLessonIds: ['animals']
+    }),
+    { type: 'picker', message: 'Language pack not found.' }
+  )
+})

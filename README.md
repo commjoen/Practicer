@@ -73,7 +73,7 @@ Lesson `id` values are selected within the active language pack, so keep them un
 ## URL shortcuts
 
 - `?pack=dutch-english&direction=source-to-target&lessons=dutch-lesson-1&practice=1` opens a practice round directly.
-- `?pack=dutch-english&direction=source-to-target&lesson=dutch-lesson-1&page=2` opens a lesson word preview on a specific page.
+- `?pack=dutch-english&direction=source-to-target&lesson=dutch-lesson-1&page=2` opens a lesson word preview on a specific page (`lessons=...` may also appear when copied from the app).
 
 ## Automation included
 
