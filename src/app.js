@@ -859,11 +859,11 @@ export function createPracticeApp(root) {
           </div>
           <p class="form-message" role="status" data-share-status></p>
           <div class="share-links" data-share-links hidden>
-            <a class="ghost-button" target="_blank" rel="noreferrer" data-share-target="x">Share on X</a>
-            <a class="ghost-button" target="_blank" rel="noreferrer" data-share-target="facebook">Share on Facebook</a>
-            <a class="ghost-button" data-share-target="imessage">Share via iMessage</a>
-            <a class="ghost-button" data-share-target="email">Share via email</a>
-            <a class="ghost-button" download="practicer-score.png" data-share-target="download">Download score image</a>
+            <button type="button" class="ghost-button" data-share-target="x">Share on X</button>
+            <button type="button" class="ghost-button" data-share-target="facebook">Share on Facebook</button>
+            <button type="button" class="ghost-button" data-share-target="imessage">Share via Messages</button>
+            <button type="button" class="ghost-button" data-share-target="email">Share via email</button>
+            <button type="button" class="ghost-button" data-share-target="download">Download score image</button>
           </div>
         </section>
       </main>
@@ -872,10 +872,54 @@ export function createPracticeApp(root) {
     const shareScoreButton = root.querySelector('[data-action="share-score"]')
     const shareLinks = root.querySelector('[data-share-links]')
     const shareStatus = root.querySelector('[data-share-status]')
+    const shareTargetButtons = {
+      x: shareLinks?.querySelector('[data-share-target="x"]'),
+      facebook: shareLinks?.querySelector('[data-share-target="facebook"]'),
+      imessage: shareLinks?.querySelector('[data-share-target="imessage"]'),
+      email: shareLinks?.querySelector('[data-share-target="email"]'),
+      download: shareLinks?.querySelector('[data-share-target="download"]')
+    }
+    const fallbackShareUrls = {
+      x: '',
+      facebook: '',
+      imessage: '',
+      email: ''
+    }
+
+    shareTargetButtons.x?.addEventListener('click', () => {
+      if (fallbackShareUrls.x) {
+        window.open(fallbackShareUrls.x, '_blank', 'noopener,noreferrer')
+      }
+    })
+    shareTargetButtons.facebook?.addEventListener('click', () => {
+      if (fallbackShareUrls.facebook) {
+        window.open(fallbackShareUrls.facebook, '_blank', 'noopener,noreferrer')
+      }
+    })
+    shareTargetButtons.imessage?.addEventListener('click', () => {
+      if (fallbackShareUrls.imessage) {
+        window.location.href = fallbackShareUrls.imessage
+      }
+    })
+    shareTargetButtons.email?.addEventListener('click', () => {
+      if (fallbackShareUrls.email) {
+        window.location.href = fallbackShareUrls.email
+      }
+    })
+    shareTargetButtons.download?.addEventListener('click', () => {
+      if (!scoreImageUrl) {
+        return
+      }
+
+      const downloadLink = document.createElement('a')
+      downloadLink.href = scoreImageUrl
+      downloadLink.download = 'practicer-score.png'
+      downloadLink.click()
+    })
+
     shareScoreButton.addEventListener('click', async () => {
       try {
         shareScoreButton.disabled = true
-        shareScoreButton.setAttribute('aria-busy', 'true')
         if (shareStatus) {
           shareStatus.textContent = 'Preparing your score image...'
         }
@@ -938,37 +982,18 @@ export function createPracticeApp(root) {
 
         const encodedText = encodeURIComponent(`${shareText} https://commjoen.github.io/Practicer/`)
         const encodedUrl = encodeURIComponent('https://commjoen.github.io/Practicer/')
-        shareLinks.querySelector('[data-share-target="x"]')?.setAttribute(
-          'href',
-          `https://twitter.com/intent/tweet?text=${encodedText}`
-        )
-        shareLinks.querySelector('[data-share-target="facebook"]')?.setAttribute(
-          'href',
-          `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
-        )
-        shareLinks.querySelector('[data-share-target="imessage"]')?.setAttribute(
-          'href',
-          `sms:&body=${encodedText}`
-        )
-        shareLinks.querySelector('[data-share-target="email"]')?.setAttribute(
-          'href',
-          `mailto:?subject=Practicer%20score&body=${encodedText}`
-        )
-        if (scoreImageUrl) {
-          shareLinks
-            .querySelector('[data-share-target="download"]')
-            ?.setAttribute('href', scoreImageUrl)
-        } else {
-          shareLinks.querySelector('[data-share-target="download"]')?.removeAttribute('href')
-        }
+        fallbackShareUrls.x = `https://twitter.com/intent/tweet?text=${encodedText}`
+        fallbackShareUrls.facebook = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+        fallbackShareUrls.imessage = `sms:&body=${encodedText}`
+        fallbackShareUrls.email = `mailto:?subject=Practicer%20score&body=${encodedText}`
 
         shareLinks.hidden = false
+        shareTargetButtons.x?.focus()
         if (shareStatus) {
           shareStatus.textContent = 'Choose where to share your score.'
         }
       } finally {
         shareScoreButton.disabled = false
-        shareScoreButton.removeAttribute('aria-busy')
       }
     })
 
