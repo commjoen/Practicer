@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/commjoen/Practicer/compare/practicer-v0.2.0...practicer-v0.3.0) (2026-09-17)
+
+
+### Features
+
+* add timer high scores and score sharing ([b0ac4fe](https://github.com/commjoen/Practicer/commit/b0ac4fe61832aca918563c72121bfa87b1abcfce))
+
+
+### Bug Fixes
+
+* correct sms fallback url and focus behavior ([b1a07a7](https://github.com/commjoen/Practicer/commit/b1a07a7acfeb781c044900bcdeadb55dfc05872b))
+* harden share fallbacks and repo link styling ([b7c5792](https://github.com/commjoen/Practicer/commit/b7c5792ee367ce136c14746f455ea8534b2e9d32))
+* improve share accessibility and lesson score tracking ([df9ae35](https://github.com/commjoen/Practicer/commit/df9ae354a30bd75edb67b5277a0f14f27a164450))
+* improve x and messages fallback links ([ba59b39](https://github.com/commjoen/Practicer/commit/ba59b397a3733f648a19534ea1bb510de52a1b8e))
+* polish share fallback behavior ([479dc68](https://github.com/commjoen/Practicer/commit/479dc68a363b4770705b1ef54bde0767dbffbef8))
+* refine per-lesson high scores and share fallback ([6d7ab7a](https://github.com/commjoen/Practicer/commit/6d7ab7a743f0dd610dfb0e2c0817f85f74f8a6fb))
+
 ## [0.2.0](https://github.com/commjoen/Practicer/compare/practicer-v0.1.0...practicer-v0.2.0) (2026-09-11)
 
 
