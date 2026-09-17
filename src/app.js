@@ -135,6 +135,25 @@ function createScoreImageBlob({
   })
 }
 
+function createMessagesShareLink(encodedText) {
+  if (typeof navigator === 'undefined') {
+    return `sms:?body=${encodedText}`
+  }
+
+  const userAgent = navigator.userAgent.toLowerCase()
+  const isAppleDevice =
+    userAgent.includes('iphone') ||
+    userAgent.includes('ipad') ||
+    userAgent.includes('ipod') ||
+    userAgent.includes('macintosh')
+
+  if (isAppleDevice) {
+    return `sms:&body=${encodedText}`
+  }
+
+  return `sms:?body=${encodedText}`
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -995,9 +1014,9 @@ export function createPracticeApp(root) {
 
         const encodedText = encodeURIComponent(`${shareText} https://commjoen.github.io/Practicer/`)
         const encodedUrl = encodeURIComponent('https://commjoen.github.io/Practicer/')
-        fallbackShareUrls.x = `https://twitter.com/intent/tweet?text=${encodedText}`
+        fallbackShareUrls.x = `https://x.com/intent/post?text=${encodedText}`
         fallbackShareUrls.facebook = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
-        fallbackShareUrls.messages = `sms:?body=${encodedText}`
+        fallbackShareUrls.messages = createMessagesShareLink(encodedText)
         fallbackShareUrls.email = `mailto:?subject=Practicer%20score&body=${encodedText}`
 
         shareLinks.hidden = false
