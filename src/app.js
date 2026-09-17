@@ -190,7 +190,8 @@ export function createPracticeApp(root) {
     submittedAnswer: '',
     showTimer: rememberedShowTimer,
     startedAt: 0,
-    elapsedSeconds: 0
+    elapsedSeconds: 0,
+    lessonStats: {}
   }
   let timerIntervalId = null
   let scoreImageUrl = ''
@@ -211,6 +212,7 @@ export function createPracticeApp(root) {
     state.submittedAnswer = ''
     state.startedAt = 0
     state.elapsedSeconds = 0
+    state.lessonStats = {}
   }
 
   function startPracticeRound() {
@@ -232,6 +234,16 @@ export function createPracticeApp(root) {
     state.submittedAnswer = ''
     state.startedAt = Date.now()
     state.elapsedSeconds = 0
+    state.lessonStats = state.activeQueue.reduce((stats, question) => {
+      const existing = stats[question.lessonId] ?? { correct: 0, total: 0 }
+      return {
+        ...stats,
+        [question.lessonId]: {
+          correct: existing.correct,
+          total: existing.total + 1
+        }
+      }
+    }, {})
     syncUrlState({ startPractice: true })
     renderQuestion()
   }
@@ -749,6 +761,10 @@ export function createPracticeApp(root) {
 
       if (correct) {
         state.correctAnswers += 1
+        const lessonStats = state.lessonStats[question.lessonId]
+        if (lessonStats) {
+          lessonStats.correct += 1
+        }
       }
 
       state.checkedAnswer = { correct }
@@ -793,11 +809,16 @@ export function createPracticeApp(root) {
 
     if (activePack) {
       selectedLessons.forEach((lesson) => {
+        const lessonStats = state.lessonStats[lesson.id]
+        const lessonPercentage = getScorePercentage(
+          lessonStats?.correct ?? 0,
+          lessonStats?.total ?? 0
+        )
         writeLessonHighScore(
           activePack.id,
           state.selectedDirection,
           lesson.id,
-          percentage
+          lessonPercentage
         )
       })
     }
@@ -836,6 +857,7 @@ export function createPracticeApp(root) {
             <button type="button" class="primary-button" data-action="again">Practice again</button>
             <button type="button" class="ghost-button" data-action="lessons">Pick different lessons</button>
           </div>
+          <p class="form-message" role="status" data-share-status></p>
           <div class="share-links" data-share-links hidden>
             <a class="ghost-button" target="_blank" rel="noreferrer" data-share-target="x">Share on X</a>
             <a class="ghost-button" target="_blank" rel="noreferrer" data-share-target="facebook">Share on Facebook</a>
@@ -849,81 +871,105 @@ export function createPracticeApp(root) {
 
     const shareScoreButton = root.querySelector('[data-action="share-score"]')
     const shareLinks = root.querySelector('[data-share-links]')
+    const shareStatus = root.querySelector('[data-share-status]')
     shareScoreButton.addEventListener('click', async () => {
-      const lessonLabel =
-        selectedLessons.length === 1
-          ? `Lesson: ${selectedLessons[0].name}`
-          : `Lessons: ${selectedLessons.length}`
-      const scoreLabel = `${state.correctAnswers} / ${state.activeQueue.length} (${percentage}%)`
-      const timeLabel = state.showTimer
-        ? `Time: ${formatElapsedTime(state.elapsedSeconds)}`
-        : 'Time: hidden'
-      const shareText = `I scored ${scoreLabel} in Practicer. ${lessonLabel}`
-      const imageBlob = await createScoreImageBlob({
-        lessonLabel,
-        scoreLabel,
-        timeLabel
-      })
-
-      if (imageBlob && scoreImageUrl) {
-        URL.revokeObjectURL(scoreImageUrl)
-        scoreImageUrl = ''
-      }
-
-      if (imageBlob) {
-        scoreImageUrl = URL.createObjectURL(imageBlob)
-      }
-
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        try {
-          const file =
-            imageBlob &&
-            typeof File !== 'undefined'
-              ? new File([imageBlob], 'practicer-score.png', { type: 'image/png' })
-              : null
-          const payload = file ? { title: 'Practicer score', text: shareText, files: [file] } : null
-
-          if (payload && (!navigator.canShare || navigator.canShare(payload))) {
-            await navigator.share(payload)
-            return
-          }
-
-          await navigator.share({ title: 'Practicer score', text: shareText })
-          return
-        } catch {
-          // Fall back to direct links.
+      try {
+        shareScoreButton.disabled = true
+        shareScoreButton.setAttribute('aria-busy', 'true')
+        if (shareStatus) {
+          shareStatus.textContent = 'Preparing your score image...'
         }
-      }
+        const lessonLabel =
+          selectedLessons.length === 1
+            ? `Lesson: ${selectedLessons[0].name}`
+            : `Lessons: ${selectedLessons.length}`
+        const scoreLabel = `${state.correctAnswers} / ${state.activeQueue.length} (${percentage}%)`
+        const timeLabel = state.showTimer
+          ? `Time: ${formatElapsedTime(state.elapsedSeconds)}`
+          : 'Time: hidden'
+        const shareText = `I scored ${scoreLabel} in Practicer. ${lessonLabel}`
+        const imageBlob = await createScoreImageBlob({
+          lessonLabel,
+          scoreLabel,
+          timeLabel
+        })
 
-      if (!shareLinks) {
-        return
-      }
+        if (scoreImageUrl) {
+          URL.revokeObjectURL(scoreImageUrl)
+          scoreImageUrl = ''
+        }
 
-      const encodedText = encodeURIComponent(`${shareText} https://commjoen.github.io/Practicer/`)
-      const encodedUrl = encodeURIComponent('https://commjoen.github.io/Practicer/')
-      shareLinks.querySelector('[data-share-target="x"]')?.setAttribute(
-        'href',
-        `https://twitter.com/intent/tweet?text=${encodedText}`
-      )
-      shareLinks.querySelector('[data-share-target="facebook"]')?.setAttribute(
-        'href',
-        `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
-      )
-      shareLinks.querySelector('[data-share-target="imessage"]')?.setAttribute(
-        'href',
-        `sms:&body=${encodedText}`
-      )
-      shareLinks.querySelector('[data-share-target="email"]')?.setAttribute(
-        'href',
-        `mailto:?subject=Practicer%20score&body=${encodedText}`
-      )
-      if (scoreImageUrl) {
-        shareLinks
-          .querySelector('[data-share-target="download"]')
-          ?.setAttribute('href', scoreImageUrl)
-      }
+        if (imageBlob) {
+          scoreImageUrl = URL.createObjectURL(imageBlob)
+        }
 
-      shareLinks.hidden = false
+        if (typeof navigator !== 'undefined' && navigator.share) {
+          try {
+            const file =
+              imageBlob &&
+              typeof File !== 'undefined'
+                ? new File([imageBlob], 'practicer-score.png', { type: 'image/png' })
+                : null
+            const payload = file
+              ? { title: 'Practicer score', text: shareText, files: [file] }
+              : null
+
+            if (payload && (!navigator.canShare || navigator.canShare(payload))) {
+              await navigator.share(payload)
+              if (shareStatus) {
+                shareStatus.textContent = 'Score shared.'
+              }
+              return
+            }
+
+            await navigator.share({ title: 'Practicer score', text: shareText })
+            if (shareStatus) {
+              shareStatus.textContent = 'Score shared.'
+            }
+            return
+          } catch {
+            // Fall back to direct links.
+          }
+        }
+
+        if (!shareLinks) {
+          return
+        }
+
+        const encodedText = encodeURIComponent(`${shareText} https://commjoen.github.io/Practicer/`)
+        const encodedUrl = encodeURIComponent('https://commjoen.github.io/Practicer/')
+        shareLinks.querySelector('[data-share-target="x"]')?.setAttribute(
+          'href',
+          `https://twitter.com/intent/tweet?text=${encodedText}`
+        )
+        shareLinks.querySelector('[data-share-target="facebook"]')?.setAttribute(
+          'href',
+          `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+        )
+        shareLinks.querySelector('[data-share-target="imessage"]')?.setAttribute(
+          'href',
+          `sms:&body=${encodedText}`
+        )
+        shareLinks.querySelector('[data-share-target="email"]')?.setAttribute(
+          'href',
+          `mailto:?subject=Practicer%20score&body=${encodedText}`
+        )
+        if (scoreImageUrl) {
+          shareLinks
+            .querySelector('[data-share-target="download"]')
+            ?.setAttribute('href', scoreImageUrl)
+        } else {
+          shareLinks.querySelector('[data-share-target="download"]')?.removeAttribute('href')
+        }
+
+        shareLinks.hidden = false
+        if (shareStatus) {
+          shareStatus.textContent = 'Choose where to share your score.'
+        }
+      } finally {
+        shareScoreButton.disabled = false
+        shareScoreButton.removeAttribute('aria-busy')
+      }
     })
 
     root.querySelector('[data-action="again"]').addEventListener('click', () => {
