@@ -861,7 +861,7 @@ export function createPracticeApp(root) {
           <div class="share-links" data-share-links hidden>
             <button type="button" class="ghost-button" data-share-target="x">Share on X</button>
             <button type="button" class="ghost-button" data-share-target="facebook">Share on Facebook</button>
-            <button type="button" class="ghost-button" data-share-target="imessage">Share via Messages</button>
+            <button type="button" class="ghost-button" data-share-target="messages">Share via SMS/Messages</button>
             <button type="button" class="ghost-button" data-share-target="email">Share via email</button>
             <button type="button" class="ghost-button" data-share-target="download">Download score image</button>
           </div>
@@ -875,14 +875,14 @@ export function createPracticeApp(root) {
     const shareTargetButtons = {
       x: shareLinks?.querySelector('[data-share-target="x"]'),
       facebook: shareLinks?.querySelector('[data-share-target="facebook"]'),
-      imessage: shareLinks?.querySelector('[data-share-target="imessage"]'),
+      messages: shareLinks?.querySelector('[data-share-target="messages"]'),
       email: shareLinks?.querySelector('[data-share-target="email"]'),
       download: shareLinks?.querySelector('[data-share-target="download"]')
     }
     const fallbackShareUrls = {
       x: '',
       facebook: '',
-      imessage: '',
+      messages: '',
       email: ''
     }
 
@@ -896,9 +896,9 @@ export function createPracticeApp(root) {
         window.open(fallbackShareUrls.facebook, '_blank', 'noopener,noreferrer')
       }
     })
-    shareTargetButtons.imessage?.addEventListener('click', () => {
-      if (fallbackShareUrls.imessage) {
-        window.location.href = fallbackShareUrls.imessage
+    shareTargetButtons.messages?.addEventListener('click', () => {
+      if (fallbackShareUrls.messages) {
+        window.location.href = fallbackShareUrls.messages
       }
     })
     shareTargetButtons.email?.addEventListener('click', () => {
@@ -971,7 +971,20 @@ export function createPracticeApp(root) {
               shareStatus.textContent = 'Score shared.'
             }
             return
-          } catch {
+          } catch (error) {
+            if (
+              error &&
+              typeof error === 'object' &&
+              ('name' in error || 'message' in error) &&
+              (error.name === 'AbortError' ||
+                (typeof error.message === 'string' &&
+                  error.message.toLowerCase().includes('cancel')))
+            ) {
+              if (shareStatus) {
+                shareStatus.textContent = 'Share cancelled.'
+              }
+              return
+            }
             // Fall back to direct links.
           }
         }
@@ -984,7 +997,7 @@ export function createPracticeApp(root) {
         const encodedUrl = encodeURIComponent('https://commjoen.github.io/Practicer/')
         fallbackShareUrls.x = `https://twitter.com/intent/tweet?text=${encodedText}`
         fallbackShareUrls.facebook = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
-        fallbackShareUrls.imessage = `sms:&body=${encodedText}`
+        fallbackShareUrls.messages = `sms:&body=${encodedText}`
         fallbackShareUrls.email = `mailto:?subject=Practicer%20score&body=${encodedText}`
 
         shareLinks.hidden = false
