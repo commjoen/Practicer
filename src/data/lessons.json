@@ -89,6 +89,30 @@
             { "source": "lachen", "target": "to laugh" },
             { "source": "ik ben trots op", "target": "i am proud of" }
           ]
+        },
+        {
+          "id": "dutch-lesson-3",
+          "name": "Lesson 3",
+          "description": "Their talents.",
+          "words": [
+            { "source": "karakter", "target": "character" },
+            { "source": "gooien", "target": "to throw" },
+            { "source": "zingen", "target": "to sing" },
+            { "source": "zitten", "target": "to sit" },
+            {
+              "source": "ik heb een talent",
+              "target": "I have a talent"
+            },
+            { "source": "het is mijn talent", "target": "It is my talent" },
+            { "source": "jij hebt een talent", "target": "You have a talent" },
+            { "source": "het is jouw talent", "target": "It is your talent" },
+            { "source": "Hij/zij/het heeft een talent", "target": "He/she/it has a talent" },
+            { "source": "Het is zijn/haar talent", "target": "It is his/her talent" },
+            { "source": "Wij hebben een talent", "target": "We have a talent" },
+            { "source": "het is ons talent", "target": "It is our talent" },
+            { "source": "Zij hebben een talent", "target": "They have a talent" },
+            { "source": "Het is hun talent", "target": "It is their talent" }
+          ]
         }
       ]
     }
