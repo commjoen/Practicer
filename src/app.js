@@ -130,6 +130,10 @@ function createScoreImageBlob({
   context.fillText(lessonLabel, 140, 380)
   context.fillText(timeLabel, 140, 440)
 
+  if (typeof canvas.toBlob !== 'function') {
+    return Promise.resolve(null)
+  }
+
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob), 'image/png')
   })
@@ -144,8 +148,7 @@ function createMessagesShareLink(encodedText) {
   const isAppleDevice =
     userAgent.includes('iphone') ||
     userAgent.includes('ipad') ||
-    userAgent.includes('ipod') ||
-    userAgent.includes('macintosh')
+    userAgent.includes('ipod')
 
   if (isAppleDevice) {
     return `sms:&body=${encodedText}`

@@ -157,6 +157,7 @@ h2 {
 .repo-link {
   color: #3f52d7;
   font-weight: 700;
+  text-decoration: underline;
 }
 
 .practice-meta {
