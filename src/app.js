@@ -10,6 +10,12 @@ import {
   parseShortcutParams,
   resolveShortcutAction
 } from './url-state.js'
+import {
+  buildLessonHighScoreStorageKey,
+  formatElapsedTime,
+  getScorePercentage,
+  SHOW_TIMER_STORAGE_KEY
+} from './progress-utils.js'
 
 const WORDS_PER_PAGE = 5
 const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
@@ -36,6 +42,97 @@ function rememberLanguagePackId(languagePackId) {
   } catch {
     // Ignore unavailable storage.
   }
+}
+
+function getRememberedShowTimer() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem(SHOW_TIMER_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberShowTimer(enabled) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(SHOW_TIMER_STORAGE_KEY, enabled ? '1' : '0')
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
+function readLessonHighScore(languagePackId, direction, lessonId) {
+  if (typeof window === 'undefined') {
+    return 0
+  }
+
+  try {
+    const key = buildLessonHighScoreStorageKey(languagePackId, direction, lessonId)
+    const rawValue = window.localStorage.getItem(key)
+    const parsedValue = Number.parseInt(rawValue ?? '', 10)
+    return Number.isFinite(parsedValue) ? Math.max(0, Math.min(parsedValue, 100)) : 0
+  } catch {
+    return 0
+  }
+}
+
+function writeLessonHighScore(languagePackId, direction, lessonId, scorePercentage) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    const key = buildLessonHighScoreStorageKey(languagePackId, direction, lessonId)
+    const previousScore = readLessonHighScore(languagePackId, direction, lessonId)
+    if (scorePercentage > previousScore) {
+      window.localStorage.setItem(key, String(scorePercentage))
+    }
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
+function createScoreImageBlob({
+  lessonLabel,
+  scoreLabel,
+  timeLabel
+}) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1200
+  canvas.height = 630
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    return Promise.resolve(null)
+  }
+
+  const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height)
+  gradient.addColorStop(0, '#f7fbff')
+  gradient.addColorStop(1, '#eef5ff')
+  context.fillStyle = gradient
+  context.fillRect(0, 0, canvas.width, canvas.height)
+
+  context.fillStyle = '#7c57f2'
+  context.fillRect(80, 80, canvas.width - 160, canvas.height - 160)
+  context.fillStyle = '#ffffff'
+  context.font = '700 42px Inter, sans-serif'
+  context.fillText('Practicer score', 140, 180)
+  context.font = '700 86px Inter, sans-serif'
+  context.fillText(scoreLabel, 140, 300)
+  context.font = '500 34px Inter, sans-serif'
+  context.fillText(lessonLabel, 140, 380)
+  context.fillText(timeLabel, 140, 440)
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/png')
+  })
 }
 
 function escapeHtml(value) {
@@ -77,6 +174,7 @@ export function createPracticeApp(root) {
   const hasRememberedLanguagePack = lessonData.languagePacks.some(
     (pack) => pack.id === rememberedLanguagePackId
   )
+  const rememberedShowTimer = getRememberedShowTimer()
 
   const state = {
     languagePacks: lessonData.languagePacks,
@@ -89,15 +187,30 @@ export function createPracticeApp(root) {
     currentIndex: 0,
     correctAnswers: 0,
     checkedAnswer: null,
-    submittedAnswer: ''
+    submittedAnswer: '',
+    showTimer: rememberedShowTimer,
+    startedAt: 0,
+    elapsedSeconds: 0
   }
+  let timerIntervalId = null
+  let scoreImageUrl = ''
 
   function resetSession() {
+    if (timerIntervalId) {
+      window.clearInterval(timerIntervalId)
+      timerIntervalId = null
+    }
+    if (scoreImageUrl) {
+      URL.revokeObjectURL(scoreImageUrl)
+      scoreImageUrl = ''
+    }
     state.activeQueue = []
     state.currentIndex = 0
     state.correctAnswers = 0
     state.checkedAnswer = null
     state.submittedAnswer = ''
+    state.startedAt = 0
+    state.elapsedSeconds = 0
   }
 
   function startPracticeRound() {
@@ -117,6 +230,8 @@ export function createPracticeApp(root) {
     state.correctAnswers = 0
     state.checkedAnswer = null
     state.submittedAnswer = ''
+    state.startedAt = Date.now()
+    state.elapsedSeconds = 0
     syncUrlState({ startPractice: true })
     renderQuestion()
   }
@@ -175,6 +290,40 @@ export function createPracticeApp(root) {
     })
     const nextUrl = `${window.location.pathname}${nextSearch}`
     window.history.replaceState(null, '', nextUrl)
+  }
+
+  function updateElapsedSeconds() {
+    if (!state.startedAt) {
+      state.elapsedSeconds = 0
+      return
+    }
+
+    state.elapsedSeconds = Math.floor((Date.now() - state.startedAt) / 1000)
+  }
+
+  function renderTimerLabel() {
+    const timerValue = root.querySelector('[data-timer-value]')
+    if (!timerValue) {
+      return
+    }
+
+    updateElapsedSeconds()
+    timerValue.textContent = formatElapsedTime(state.elapsedSeconds)
+  }
+
+  function startTimer() {
+    if (!state.showTimer || typeof window === 'undefined') {
+      return
+    }
+
+    if (timerIntervalId) {
+      window.clearInterval(timerIntervalId)
+    }
+
+    renderTimerLabel()
+    timerIntervalId = window.setInterval(() => {
+      renderTimerLabel()
+    }, 1000)
   }
 
   function renderLessonWordPreview(lessonId, page = 0) {
@@ -310,6 +459,16 @@ export function createPracticeApp(root) {
             Help kids learn what a word means, then spell it on their own.
             Choose one or more lessons and start a playful spelling round.
           </p>
+          <p>
+            <a
+              class="repo-link"
+              href="https://github.com/commjoen/Practicer"
+              target="_blank"
+              rel="noreferrer"
+            >
+              View this repository on GitHub
+            </a>
+          </p>
         </section>
 
         <section class="panel">
@@ -357,6 +516,15 @@ export function createPracticeApp(root) {
                   ${escapeHtml(activePack.targetLanguage)} → ${escapeHtml(activePack.sourceLanguage)}
                 </label>
               </fieldset>
+              <label class="timer-option">
+                <input
+                  type="checkbox"
+                  name="showTimer"
+                  value="1"
+                  ${state.showTimer ? 'checked' : ''}
+                />
+                Show count-up timer during practice
+              </label>
             </div>
             <div class="lesson-grid">
               ${activePack.lessons
@@ -374,6 +542,13 @@ export function createPracticeApp(root) {
                           <strong>${escapeHtml(lesson.name)}</strong>
                           <small>${escapeHtml(lesson.description)}</small>
                           <em>${lesson.words.length} words</em>
+                          <small class="high-score">
+                           High score: ${readLessonHighScore(
+                             activePack.id,
+                             state.selectedDirection,
+                             lesson.id
+                           )}%
+                          </small>
                         </span>
                       </label>
                       <button
@@ -403,11 +578,13 @@ export function createPracticeApp(root) {
     const form = root.querySelector('.lesson-form')
     const languagePackSelect = root.querySelector('#languagePack')
     const directionInputs = root.querySelectorAll('input[name="direction"]')
+    const timerInput = root.querySelector('input[name="showTimer"]')
     const viewLessonButtons = root.querySelectorAll('[data-action="view-lesson"]')
 
     languagePackSelect.addEventListener('change', () => {
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLanguagePackId = languagePackSelect.value
+      state.showTimer = Boolean(timerInput?.checked)
       const nextPack = getActiveLanguagePack()
       const nextLessonIds = new Set(nextPack?.lessons.map((lesson) => lesson.id))
       state.selectedLessonIds = selectedLessonIds.filter((id) =>
@@ -421,6 +598,7 @@ export function createPracticeApp(root) {
       input.addEventListener('change', () => {
         state.selectedLessonIds = getSelectedLessonIds(form)
         state.selectedDirection = input.value
+        state.showTimer = Boolean(timerInput?.checked)
         syncUrlState()
         renderLessonPicker(
           message,
@@ -450,6 +628,8 @@ export function createPracticeApp(root) {
         selectedDirection === 'target-to-source'
           ? selectedDirection
           : 'source-to-target'
+      state.showTimer = formData.get('showTimer') === '1'
+      rememberShowTimer(state.showTimer)
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLessonIds = selectedLessonIds
 
@@ -464,6 +644,11 @@ export function createPracticeApp(root) {
       if (event.target instanceof HTMLInputElement && event.target.name === 'lesson') {
         state.selectedLessonIds = getSelectedLessonIds(form)
         syncUrlState()
+      }
+
+      if (event.target instanceof HTMLInputElement && event.target.name === 'showTimer') {
+        state.showTimer = event.target.checked
+        rememberShowTimer(state.showTimer)
       }
     })
 
@@ -490,7 +675,14 @@ export function createPracticeApp(root) {
         <section class="panel practice-panel">
           <div class="progress-row">
             <button class="ghost-button" type="button" data-action="restart">Change lessons</button>
-            <p>Word ${state.currentIndex + 1} of ${state.activeQueue.length}</p>
+            <div class="practice-meta">
+              <p>Word ${state.currentIndex + 1} of ${state.activeQueue.length}</p>
+              ${
+                state.showTimer
+                  ? '<p class="timer-readout">Timer: <strong data-timer-value>00:00</strong></p>'
+                  : ''
+              }
+            </div>
           </div>
           <p class="lesson-tag">${escapeHtml(question.lessonName)}</p>
           <h1>${escapeHtml(question.prompt)}</h1>
@@ -534,6 +726,7 @@ export function createPracticeApp(root) {
 
     const restartButton = root.querySelector('[data-action="restart"]')
     restartButton.addEventListener('click', () => renderLessonPicker())
+    startTimer()
 
     const form = root.querySelector('.answer-form')
     const answerInput = root.querySelector('#answer')
@@ -587,19 +780,151 @@ export function createPracticeApp(root) {
   }
 
   function renderScore() {
+    if (timerIntervalId && typeof window !== 'undefined') {
+      window.clearInterval(timerIntervalId)
+      timerIntervalId = null
+    }
+    updateElapsedSeconds()
+    const percentage = getScorePercentage(state.correctAnswers, state.activeQueue.length)
+    const activePack = getActiveLanguagePack()
+    const selectedLessons = activePack
+      ? activePack.lessons.filter((lesson) => state.selectedLessonIds.includes(lesson.id))
+      : []
+
+    if (activePack) {
+      selectedLessons.forEach((lesson) => {
+        writeLessonHighScore(
+          activePack.id,
+          state.selectedDirection,
+          lesson.id,
+          percentage
+        )
+      })
+    }
+
     root.innerHTML = `
       <main class="app-shell">
         <section class="panel score-panel">
           <p class="eyebrow">Practice complete</p>
           <h1>${state.correctAnswers} / ${state.activeQueue.length}</h1>
           <p class="lead">${createScoreSummary(state.correctAnswers, state.activeQueue.length)}</p>
+          ${
+            state.showTimer
+              ? `<p class="lead">Time: ${formatElapsedTime(state.elapsedSeconds)}</p>`
+              : ''
+          }
+          ${
+            selectedLessons.length > 0
+              ? `
+                <p class="lead">
+                  ${selectedLessons
+                    .map(
+                      (lesson) =>
+                        `${escapeHtml(lesson.name)} best: ${readLessonHighScore(
+                          activePack.id,
+                          state.selectedDirection,
+                          lesson.id
+                        )}%`
+                    )
+                    .join(' · ')}
+                </p>
+              `
+              : ''
+          }
           <div class="actions stacked">
+            <button type="button" class="primary-button" data-action="share-score">Share score</button>
             <button type="button" class="primary-button" data-action="again">Practice again</button>
             <button type="button" class="ghost-button" data-action="lessons">Pick different lessons</button>
+          </div>
+          <div class="share-links" data-share-links hidden>
+            <a class="ghost-button" target="_blank" rel="noreferrer" data-share-target="x">Share on X</a>
+            <a class="ghost-button" target="_blank" rel="noreferrer" data-share-target="facebook">Share on Facebook</a>
+            <a class="ghost-button" data-share-target="imessage">Share via iMessage</a>
+            <a class="ghost-button" data-share-target="email">Share via email</a>
+            <a class="ghost-button" download="practicer-score.png" data-share-target="download">Download score image</a>
           </div>
         </section>
       </main>
     `
+
+    const shareScoreButton = root.querySelector('[data-action="share-score"]')
+    const shareLinks = root.querySelector('[data-share-links]')
+    shareScoreButton.addEventListener('click', async () => {
+      const lessonLabel =
+        selectedLessons.length === 1
+          ? `Lesson: ${selectedLessons[0].name}`
+          : `Lessons: ${selectedLessons.length}`
+      const scoreLabel = `${state.correctAnswers} / ${state.activeQueue.length} (${percentage}%)`
+      const timeLabel = state.showTimer
+        ? `Time: ${formatElapsedTime(state.elapsedSeconds)}`
+        : 'Time: hidden'
+      const shareText = `I scored ${scoreLabel} in Practicer. ${lessonLabel}`
+      const imageBlob = await createScoreImageBlob({
+        lessonLabel,
+        scoreLabel,
+        timeLabel
+      })
+
+      if (imageBlob && scoreImageUrl) {
+        URL.revokeObjectURL(scoreImageUrl)
+        scoreImageUrl = ''
+      }
+
+      if (imageBlob) {
+        scoreImageUrl = URL.createObjectURL(imageBlob)
+      }
+
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        try {
+          const file =
+            imageBlob &&
+            typeof File !== 'undefined'
+              ? new File([imageBlob], 'practicer-score.png', { type: 'image/png' })
+              : null
+          const payload = file ? { title: 'Practicer score', text: shareText, files: [file] } : null
+
+          if (payload && (!navigator.canShare || navigator.canShare(payload))) {
+            await navigator.share(payload)
+            return
+          }
+
+          await navigator.share({ title: 'Practicer score', text: shareText })
+          return
+        } catch {
+          // Fall back to direct links.
+        }
+      }
+
+      if (!shareLinks) {
+        return
+      }
+
+      const encodedText = encodeURIComponent(`${shareText} https://commjoen.github.io/Practicer/`)
+      const encodedUrl = encodeURIComponent('https://commjoen.github.io/Practicer/')
+      shareLinks.querySelector('[data-share-target="x"]')?.setAttribute(
+        'href',
+        `https://twitter.com/intent/tweet?text=${encodedText}`
+      )
+      shareLinks.querySelector('[data-share-target="facebook"]')?.setAttribute(
+        'href',
+        `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+      )
+      shareLinks.querySelector('[data-share-target="imessage"]')?.setAttribute(
+        'href',
+        `sms:&body=${encodedText}`
+      )
+      shareLinks.querySelector('[data-share-target="email"]')?.setAttribute(
+        'href',
+        `mailto:?subject=Practicer%20score&body=${encodedText}`
+      )
+      if (scoreImageUrl) {
+        shareLinks
+          .querySelector('[data-share-target="download"]')
+          ?.setAttribute('href', scoreImageUrl)
+      }
+
+      shareLinks.hidden = false
+    })
 
     root.querySelector('[data-action="again"]').addEventListener('click', () => {
       startPracticeRound()
