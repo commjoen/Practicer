@@ -997,11 +997,10 @@ export function createPracticeApp(root) {
         const encodedUrl = encodeURIComponent('https://commjoen.github.io/Practicer/')
         fallbackShareUrls.x = `https://twitter.com/intent/tweet?text=${encodedText}`
         fallbackShareUrls.facebook = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
-        fallbackShareUrls.messages = `sms:&body=${encodedText}`
+        fallbackShareUrls.messages = `sms:?body=${encodedText}`
         fallbackShareUrls.email = `mailto:?subject=Practicer%20score&body=${encodedText}`
 
         shareLinks.hidden = false
-        shareTargetButtons.x?.focus()
         if (shareStatus) {
           shareStatus.textContent = 'Choose where to share your score.'
         }
