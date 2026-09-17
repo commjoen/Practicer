@@ -101,6 +101,12 @@ select {
   gap: 0.4rem;
 }
 
+.timer-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .lesson-card {
   display: flex;
   flex-direction: column;
@@ -146,6 +152,26 @@ h2 {
 .panel-heading p,
 .form-message {
   color: #4c647b;
+}
+
+.repo-link {
+  color: #3f52d7;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.practice-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.timer-readout {
+  margin: 0;
+}
+
+.high-score {
+  font-weight: 600;
 }
 
 .lesson-card em,
@@ -260,6 +286,13 @@ h2 {
   margin: 0;
 }
 
+.share-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 @media (max-width: 640px) {
   .panel-heading,
   .progress-row,
@@ -267,5 +300,9 @@ h2 {
   .pagination-controls {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .practice-meta {
+    align-items: flex-start;
   }
 }
