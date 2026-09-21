@@ -19,6 +19,7 @@ import {
 
 const WORDS_PER_PAGE = 5
 const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
+const RANDOMIZE_WORDS_STORAGE_KEY = 'practicer:randomizeWords'
 
 function getRememberedLanguagePackId() {
   if (typeof window === 'undefined') {
@@ -63,6 +64,30 @@ function rememberShowTimer(enabled) {
 
   try {
     window.localStorage.setItem(SHOW_TIMER_STORAGE_KEY, enabled ? '1' : '0')
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
+function getRememberedRandomizeWords() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem(RANDOMIZE_WORDS_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberRandomizeWords(enabled) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(RANDOMIZE_WORDS_STORAGE_KEY, enabled ? '1' : '0')
   } catch {
     // Ignore unavailable storage.
   }
@@ -197,6 +222,7 @@ export function createPracticeApp(root) {
     (pack) => pack.id === rememberedLanguagePackId
   )
   const rememberedShowTimer = getRememberedShowTimer()
+  const rememberedRandomizeWords = getRememberedRandomizeWords()
 
   const state = {
     languagePacks: lessonData.languagePacks,
@@ -205,6 +231,7 @@ export function createPracticeApp(root) {
       : (lessonData.languagePacks[0]?.id ?? ''),
     selectedDirection: 'source-to-target',
     selectedLessonIds: [],
+    randomizeWords: rememberedRandomizeWords,
     activeQueue: [],
     currentIndex: 0,
     correctAnswers: 0,
@@ -248,7 +275,8 @@ export function createPracticeApp(root) {
     state.activeQueue = buildPracticeQueue(
       activePack.lessons,
       state.selectedLessonIds,
-      state.selectedDirection
+      state.selectedDirection,
+      { randomizeWords: state.randomizeWords }
     )
     state.currentIndex = 0
     state.correctAnswers = 0
@@ -559,6 +587,15 @@ export function createPracticeApp(root) {
                 />
                 Show count-up timer during practice
               </label>
+              <label class="timer-option">
+                <input
+                  type="checkbox"
+                  name="randomizeWords"
+                  value="1"
+                  ${state.randomizeWords ? 'checked' : ''}
+                />
+                Randomise word order for selected lessons
+              </label>
             </div>
             <div class="lesson-grid">
               ${activePack.lessons
@@ -613,12 +650,14 @@ export function createPracticeApp(root) {
     const languagePackSelect = root.querySelector('#languagePack')
     const directionInputs = root.querySelectorAll('input[name="direction"]')
     const timerInput = root.querySelector('input[name="showTimer"]')
+    const randomizeWordsInput = root.querySelector('input[name="randomizeWords"]')
     const viewLessonButtons = root.querySelectorAll('[data-action="view-lesson"]')
 
     languagePackSelect.addEventListener('change', () => {
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLanguagePackId = languagePackSelect.value
       state.showTimer = Boolean(timerInput?.checked)
+      state.randomizeWords = Boolean(randomizeWordsInput?.checked)
       const nextPack = getActiveLanguagePack()
       const nextLessonIds = new Set(nextPack?.lessons.map((lesson) => lesson.id))
       state.selectedLessonIds = selectedLessonIds.filter((id) =>
@@ -633,6 +672,7 @@ export function createPracticeApp(root) {
         state.selectedLessonIds = getSelectedLessonIds(form)
         state.selectedDirection = input.value
         state.showTimer = Boolean(timerInput?.checked)
+        state.randomizeWords = Boolean(randomizeWordsInput?.checked)
         syncUrlState()
         renderLessonPicker(
           message,
@@ -663,7 +703,9 @@ export function createPracticeApp(root) {
           ? selectedDirection
           : 'source-to-target'
       state.showTimer = formData.get('showTimer') === '1'
+      state.randomizeWords = formData.get('randomizeWords') === '1'
       rememberShowTimer(state.showTimer)
+      rememberRandomizeWords(state.randomizeWords)
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLessonIds = selectedLessonIds
 
@@ -683,6 +725,14 @@ export function createPracticeApp(root) {
       if (event.target instanceof HTMLInputElement && event.target.name === 'showTimer') {
         state.showTimer = event.target.checked
         rememberShowTimer(state.showTimer)
+      }
+
+      if (
+        event.target instanceof HTMLInputElement &&
+        event.target.name === 'randomizeWords'
+      ) {
+        state.randomizeWords = event.target.checked
+        rememberRandomizeWords(state.randomizeWords)
       }
     })
 
