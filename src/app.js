@@ -19,6 +19,7 @@ import {
 
 const WORDS_PER_PAGE = 5
 const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
+const RANDOMIZE_WORDS_STORAGE_KEY = 'practicer:randomizeWords'
 
 function getRememberedLanguagePackId() {
   if (typeof window === 'undefined') {
@@ -63,6 +64,30 @@ function rememberShowTimer(enabled) {
 
   try {
     window.localStorage.setItem(SHOW_TIMER_STORAGE_KEY, enabled ? '1' : '0')
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
+function getRememberedRandomizeWords() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem(RANDOMIZE_WORDS_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberRandomizeWords(enabled) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(RANDOMIZE_WORDS_STORAGE_KEY, enabled ? '1' : '0')
   } catch {
     // Ignore unavailable storage.
   }
@@ -197,6 +222,7 @@ export function createPracticeApp(root) {
     (pack) => pack.id === rememberedLanguagePackId
   )
   const rememberedShowTimer = getRememberedShowTimer()
+  const rememberedRandomizeWords = getRememberedRandomizeWords()
 
   const state = {
     languagePacks: lessonData.languagePacks,
@@ -205,7 +231,7 @@ export function createPracticeApp(root) {
       : (lessonData.languagePacks[0]?.id ?? ''),
     selectedDirection: 'source-to-target',
     selectedLessonIds: [],
-    randomizeWords: false,
+    randomizeWords: rememberedRandomizeWords,
     activeQueue: [],
     currentIndex: 0,
     correctAnswers: 0,
@@ -679,6 +705,7 @@ export function createPracticeApp(root) {
       state.showTimer = formData.get('showTimer') === '1'
       state.randomizeWords = formData.get('randomizeWords') === '1'
       rememberShowTimer(state.showTimer)
+      rememberRandomizeWords(state.randomizeWords)
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLessonIds = selectedLessonIds
 
@@ -705,6 +732,7 @@ export function createPracticeApp(root) {
         event.target.name === 'randomizeWords'
       ) {
         state.randomizeWords = event.target.checked
+        rememberRandomizeWords(state.randomizeWords)
       }
     })
 
