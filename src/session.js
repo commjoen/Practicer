@@ -36,10 +36,28 @@ function createWordEntry(word, direction) {
   }
 }
 
+function shuffleQueue(queue, randomSource) {
+  const shuffledQueue = [...queue]
+
+  for (let index = shuffledQueue.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(randomSource() * (index + 1))
+    ;[shuffledQueue[index], shuffledQueue[randomIndex]] = [
+      shuffledQueue[randomIndex],
+      shuffledQueue[index]
+    ]
+  }
+
+  return shuffledQueue
+}
+
 export function buildPracticeQueue(
   lessons,
   selectedLessonIds,
-  direction = 'source-to-target'
+  direction = 'source-to-target',
+  {
+    randomizeWords = false,
+    randomSource = Math.random
+  } = {}
 ) {
   const selected = lessons.filter(({ id }) => selectedLessonIds.includes(id))
 
@@ -47,13 +65,19 @@ export function buildPracticeQueue(
     throw new Error('Select at least one lesson to start practicing.')
   }
 
-  return selected.flatMap((lesson) =>
+  const queue = selected.flatMap((lesson) =>
     lesson.words.map((word) => ({
       lessonId: lesson.id,
       lessonName: lesson.name,
       ...createWordEntry(word, direction)
     }))
   )
+
+  if (!randomizeWords) {
+    return queue
+  }
+
+  return shuffleQueue(queue, randomSource)
 }
 
 export function createScoreSummary(correctAnswers, totalQuestions) {

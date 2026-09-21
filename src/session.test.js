@@ -64,6 +64,31 @@ test('buildPracticeQueue can reverse the practice direction', () => {
   ])
 })
 
+test('buildPracticeQueue can randomize word order', () => {
+  assert.deepEqual(
+    buildPracticeQueue(lessons, ['one', 'two'], 'source-to-target', {
+      randomizeWords: true,
+      randomSource: () => 0
+    }),
+    [
+      {
+        lessonId: 'two',
+        lessonName: 'Lesson two',
+        prompt: 'dog, hound',
+        answer: 'perro',
+        acceptedAnswers: ['perro']
+      },
+      {
+        lessonId: 'one',
+        lessonName: 'Lesson one',
+        prompt: 'cat',
+        answer: 'gato',
+        acceptedAnswers: ['gato']
+      }
+    ]
+  )
+})
+
 test('buildPracticeQueue accepts target variants in forward direction', () => {
   const variantLessons = [
     {
