@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/commjoen/Practicer/compare/practicer-v0.3.0...practicer-v0.4.0) (2026-09-22)
+
+
+### Features
+
+* add case-sensitive option and completion balloons ([21b30b6](https://github.com/commjoen/Practicer/commit/21b30b66d14ef59c247f82a960c4cb28e4ecba33))
+
 ## [0.3.0](https://github.com/commjoen/Practicer/compare/practicer-v0.2.0...practicer-v0.3.0) (2026-09-17)
 
 
