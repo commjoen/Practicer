@@ -21,8 +21,7 @@ const WORDS_PER_PAGE = 5
 const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
 const RANDOMIZE_WORDS_STORAGE_KEY = 'practicer:randomizeWords'
 const CASE_SENSITIVE_STORAGE_KEY = 'practicer:caseSensitive'
-const BALLOONS_SCRIPT_URL =
-  'https://cdn.jsdelivr.net/gh/basemax/balloons-demo-js@master/balloons.min.js'
+const BALLOONS_SCRIPT_PATH = '/balloons.min.js'
 
 function getRememberedLanguagePackId() {
   if (typeof window === 'undefined') {
@@ -217,7 +216,7 @@ function loadBalloonsScript() {
 
   return new Promise((resolve) => {
     const script = document.createElement('script')
-    script.src = BALLOONS_SCRIPT_URL
+    script.src = BALLOONS_SCRIPT_PATH
     script.async = true
     script.dataset.balloonsScript = '1'
     script.addEventListener('load', () => resolve(true), { once: true })
@@ -341,7 +340,8 @@ export function createPracticeApp(root) {
     showTimer: rememberedShowTimer,
     startedAt: 0,
     elapsedSeconds: 0,
-    lessonStats: {}
+    lessonStats: {},
+    didCelebrateCompletion: false
   }
   let timerIntervalId = null
   let scoreImageUrl = ''
@@ -363,6 +363,7 @@ export function createPracticeApp(root) {
     state.startedAt = 0
     state.elapsedSeconds = 0
     state.lessonStats = {}
+    state.didCelebrateCompletion = false
   }
 
   function startPracticeRound() {
@@ -385,6 +386,7 @@ export function createPracticeApp(root) {
     state.submittedAnswer = ''
     state.startedAt = Date.now()
     state.elapsedSeconds = 0
+    state.didCelebrateCompletion = false
     state.lessonStats = state.activeQueue.reduce((stats, question) => {
       const existing = stats[question.lessonId] ?? { correct: 0, total: 0 }
       return {
@@ -1065,7 +1067,10 @@ export function createPracticeApp(root) {
         </section>
       </main>
     `
-    void triggerCompletionBalloons()
+    if (!state.didCelebrateCompletion) {
+      state.didCelebrateCompletion = true
+      void triggerCompletionBalloons()
+    }
 
     const shareScoreButton = root.querySelector('[data-action="share-score"]')
     const shareLinks = root.querySelector('[data-share-links]')
