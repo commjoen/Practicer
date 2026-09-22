@@ -25,8 +25,26 @@ test('normalizeAnswer trims, lowers case, and collapses spaces', () => {
   assert.equal(normalizeAnswer('  Ho  La  '), 'ho la')
 })
 
+test('normalizeAnswer preserves case when case-sensitive mode is enabled', () => {
+  assert.equal(normalizeAnswer('  Ho  La  ', { caseSensitive: true }), 'Ho La')
+})
+
 test('isCorrectAnswer ignores casing and surrounding whitespace', () => {
   assert.equal(isCorrectAnswer('  GATO ', 'gato'), true)
+})
+
+test('isCorrectAnswer can enforce case-sensitive answers', () => {
+  assert.equal(
+    isCorrectAnswer('  GATO ', 'gato', { caseSensitive: true }),
+    false
+  )
+})
+
+test('isCorrectAnswer still trims and collapses spaces when case-sensitive', () => {
+  assert.equal(
+    isCorrectAnswer('  open   ai ', 'open ai', { caseSensitive: true }),
+    true
+  )
 })
 
 test('isCorrectAnswer accepts one of many variants', () => {

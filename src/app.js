@@ -20,6 +20,8 @@ import {
 const WORDS_PER_PAGE = 5
 const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
 const RANDOMIZE_WORDS_STORAGE_KEY = 'practicer:randomizeWords'
+const CASE_SENSITIVE_STORAGE_KEY = 'practicer:caseSensitive'
+const BALLOONS_SCRIPT_PATH = '/balloons.min.js'
 
 function getRememberedLanguagePackId() {
   if (typeof window === 'undefined') {
@@ -88,6 +90,30 @@ function rememberRandomizeWords(enabled) {
 
   try {
     window.localStorage.setItem(RANDOMIZE_WORDS_STORAGE_KEY, enabled ? '1' : '0')
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
+function getRememberedCaseSensitive() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem(CASE_SENSITIVE_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberCaseSensitive(enabled) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(CASE_SENSITIVE_STORAGE_KEY, enabled ? '1' : '0')
   } catch {
     // Ignore unavailable storage.
   }
@@ -164,6 +190,78 @@ function createScoreImageBlob({
   })
 }
 
+function loadBalloonsScript() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return Promise.resolve(false)
+  }
+
+  if (typeof window.balloons === 'function') {
+    return Promise.resolve(true)
+  }
+
+  const existingScript = document.querySelector('script[data-balloons-script="1"]')
+  if (existingScript) {
+    return new Promise((resolve) => {
+      if (typeof window.balloons === 'function') {
+        resolve(true)
+        return
+      }
+      existingScript.addEventListener('load', () => resolve(true), { once: true })
+      existingScript.addEventListener('error', () => resolve(false), { once: true })
+      window.setTimeout(() => {
+        resolve(typeof window.balloons === 'function')
+      }, 0)
+    })
+  }
+
+  return new Promise((resolve) => {
+    const script = document.createElement('script')
+    script.src = BALLOONS_SCRIPT_PATH
+    script.async = true
+    script.dataset.balloonsScript = '1'
+    script.addEventListener('load', () => resolve(true), { once: true })
+    script.addEventListener('error', () => resolve(false), { once: true })
+    document.head.append(script)
+  })
+}
+
+function runBalloonsFallback() {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  const container = document.createElement('div')
+  container.className = 'balloons-fallback'
+  const colors = ['#ff5c7a', '#3f8cff', '#7c57f2', '#ffbe55', '#4ecb71']
+
+  for (let index = 0; index < 18; index += 1) {
+    const balloon = document.createElement('span')
+    balloon.className = 'balloon'
+    balloon.style.left = `${Math.random() * 100}%`
+    balloon.style.background = colors[index % colors.length]
+    balloon.style.animationDelay = `${Math.random() * 0.9}s`
+    balloon.style.animationDuration = `${3.6 + Math.random() * 1.7}s`
+    container.append(balloon)
+  }
+
+  document.body.append(container)
+  window.setTimeout(() => container.remove(), 6500)
+}
+
+async function triggerCompletionBalloons() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const hasLoadedScript = await loadBalloonsScript()
+  if (hasLoadedScript && typeof window.balloons === 'function') {
+    window.balloons()
+    return
+  }
+
+  runBalloonsFallback()
+}
+
 function createMessagesShareLink(encodedText) {
   if (typeof navigator === 'undefined') {
     return `sms:?body=${encodedText}`
@@ -223,6 +321,7 @@ export function createPracticeApp(root) {
   )
   const rememberedShowTimer = getRememberedShowTimer()
   const rememberedRandomizeWords = getRememberedRandomizeWords()
+  const rememberedCaseSensitive = getRememberedCaseSensitive()
 
   const state = {
     languagePacks: lessonData.languagePacks,
@@ -237,10 +336,12 @@ export function createPracticeApp(root) {
     correctAnswers: 0,
     checkedAnswer: null,
     submittedAnswer: '',
+    caseSensitive: rememberedCaseSensitive,
     showTimer: rememberedShowTimer,
     startedAt: 0,
     elapsedSeconds: 0,
-    lessonStats: {}
+    lessonStats: {},
+    didCelebrateCompletion: false
   }
   let timerIntervalId = null
   let scoreImageUrl = ''
@@ -262,6 +363,7 @@ export function createPracticeApp(root) {
     state.startedAt = 0
     state.elapsedSeconds = 0
     state.lessonStats = {}
+    state.didCelebrateCompletion = false
   }
 
   function startPracticeRound() {
@@ -284,6 +386,7 @@ export function createPracticeApp(root) {
     state.submittedAnswer = ''
     state.startedAt = Date.now()
     state.elapsedSeconds = 0
+    state.didCelebrateCompletion = false
     state.lessonStats = state.activeQueue.reduce((stats, question) => {
       const existing = stats[question.lessonId] ?? { correct: 0, total: 0 }
       return {
@@ -596,6 +699,15 @@ export function createPracticeApp(root) {
                 />
                 Randomise word order for selected lessons
               </label>
+              <label class="timer-option">
+                <input
+                  type="checkbox"
+                  name="caseSensitive"
+                  value="1"
+                  ${state.caseSensitive ? 'checked' : ''}
+                />
+                Make spelling checks case-sensitive
+              </label>
             </div>
             <div class="lesson-grid">
               ${activePack.lessons
@@ -651,6 +763,7 @@ export function createPracticeApp(root) {
     const directionInputs = root.querySelectorAll('input[name="direction"]')
     const timerInput = root.querySelector('input[name="showTimer"]')
     const randomizeWordsInput = root.querySelector('input[name="randomizeWords"]')
+    const caseSensitiveInput = root.querySelector('input[name="caseSensitive"]')
     const viewLessonButtons = root.querySelectorAll('[data-action="view-lesson"]')
 
     languagePackSelect.addEventListener('change', () => {
@@ -658,6 +771,7 @@ export function createPracticeApp(root) {
       state.selectedLanguagePackId = languagePackSelect.value
       state.showTimer = Boolean(timerInput?.checked)
       state.randomizeWords = Boolean(randomizeWordsInput?.checked)
+      state.caseSensitive = Boolean(caseSensitiveInput?.checked)
       const nextPack = getActiveLanguagePack()
       const nextLessonIds = new Set(nextPack?.lessons.map((lesson) => lesson.id))
       state.selectedLessonIds = selectedLessonIds.filter((id) =>
@@ -673,6 +787,7 @@ export function createPracticeApp(root) {
         state.selectedDirection = input.value
         state.showTimer = Boolean(timerInput?.checked)
         state.randomizeWords = Boolean(randomizeWordsInput?.checked)
+        state.caseSensitive = Boolean(caseSensitiveInput?.checked)
         syncUrlState()
         renderLessonPicker(
           message,
@@ -704,8 +819,10 @@ export function createPracticeApp(root) {
           : 'source-to-target'
       state.showTimer = formData.get('showTimer') === '1'
       state.randomizeWords = formData.get('randomizeWords') === '1'
+      state.caseSensitive = formData.get('caseSensitive') === '1'
       rememberShowTimer(state.showTimer)
       rememberRandomizeWords(state.randomizeWords)
+      rememberCaseSensitive(state.caseSensitive)
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLessonIds = selectedLessonIds
 
@@ -733,6 +850,14 @@ export function createPracticeApp(root) {
       ) {
         state.randomizeWords = event.target.checked
         rememberRandomizeWords(state.randomizeWords)
+      }
+
+      if (
+        event.target instanceof HTMLInputElement &&
+        event.target.name === 'caseSensitive'
+      ) {
+        state.caseSensitive = event.target.checked
+        rememberCaseSensitive(state.caseSensitive)
       }
     })
 
@@ -829,7 +954,9 @@ export function createPracticeApp(root) {
 
       const answer = answerInput.value
       state.submittedAnswer = answer
-      const correct = isCorrectAnswer(answer, question.acceptedAnswers)
+      const correct = isCorrectAnswer(answer, question.acceptedAnswers, {
+        caseSensitive: state.caseSensitive
+      })
 
       if (correct) {
         state.correctAnswers += 1
@@ -940,6 +1067,10 @@ export function createPracticeApp(root) {
         </section>
       </main>
     `
+    if (!state.didCelebrateCompletion) {
+      state.didCelebrateCompletion = true
+      void triggerCompletionBalloons()
+    }
 
     const shareScoreButton = root.querySelector('[data-action="share-score"]')
     const shareLinks = root.querySelector('[data-share-links]')

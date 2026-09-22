@@ -1,5 +1,6 @@
-export function normalizeAnswer(value) {
-  return value.trim().replace(/\s+/g, ' ').toLowerCase()
+export function normalizeAnswer(value, { caseSensitive = false } = {}) {
+  const normalized = value.trim().replace(/\s+/g, ' ')
+  return caseSensitive ? normalized : normalized.toLowerCase()
 }
 
 function toVariantArray(value) {
@@ -10,10 +11,15 @@ function toVariantArray(value) {
   return [value]
 }
 
-export function isCorrectAnswer(answer, expectedAnswer) {
-  const normalizedAnswer = normalizeAnswer(answer)
+export function isCorrectAnswer(
+  answer,
+  expectedAnswer,
+  { caseSensitive = false } = {}
+) {
+  const normalizedAnswer = normalizeAnswer(answer, { caseSensitive })
   return toVariantArray(expectedAnswer).some(
-    (candidate) => normalizeAnswer(candidate) === normalizedAnswer
+    (candidate) =>
+      normalizeAnswer(candidate, { caseSensitive }) === normalizedAnswer
   )
 }
 
