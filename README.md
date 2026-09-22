@@ -16,9 +16,11 @@ GitHub Pages URL: https://commjoen.github.io/Practicer/
 - Remembers the last practiced language pack
 - Lets learners select one or more lessons before starting
 - Adds an option to randomise word order across selected lessons
+- Adds an option to enforce case-sensitive answer checks
 - Lets learners practice in both language directions
 - Gives instant feedback after every answer
 - Shows a final score at the end of a practice round
+- Celebrates completed rounds with a balloons animation
 
 ## Development plan
 

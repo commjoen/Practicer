@@ -293,6 +293,48 @@ h2 {
   margin-top: 1rem;
 }
 
+.balloons-fallback {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.balloons-fallback .balloon {
+  position: absolute;
+  bottom: -100px;
+  width: 42px;
+  height: 54px;
+  border-radius: 50% 50% 45% 45%;
+  opacity: 0.9;
+  animation-name: balloon-rise;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+.balloons-fallback .balloon::after {
+  content: '';
+  position: absolute;
+  top: 54px;
+  left: 20px;
+  width: 2px;
+  height: 54px;
+  background: rgba(23, 50, 77, 0.18);
+}
+
+@keyframes balloon-rise {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.92;
+  }
+
+  100% {
+    transform: translateY(-115vh) translateX(24px);
+    opacity: 0;
+  }
+}
+
 @media (max-width: 640px) {
   .panel-heading,
   .progress-row,
