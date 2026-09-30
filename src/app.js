@@ -256,6 +256,7 @@ export function createPracticeApp(root) {
     state.correctAnswers = 0
     state.checkedAnswer = null
     state.submittedAnswer = ''
+    state.misspelledWords = [],
     state.startedAt = Date.now()
     state.elapsedSeconds = 0
     state.lessonStats = state.activeQueue.reduce((stats, question) => {
