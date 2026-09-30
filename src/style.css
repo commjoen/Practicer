@@ -251,6 +251,33 @@ h2 {
   color: #a33434;
 }
 
+.misspelled-words {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  background: #fff8e8;
+}
+
+.misspelled-words h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.misspelled-words ul {
+  margin: 0 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.misspelled-words li {
+  margin: 0.5rem 0;
+}
+
+.misspelled-words li span {
+  display: block;
+  color: #4c647b;
+  font-size: 0.95rem;
+}
+
 .preview-meta {
   margin: 1rem 0 0;
   color: #4c647b;
