@@ -209,6 +209,7 @@ export function createPracticeApp(root) {
     currentIndex: 0,
     correctAnswers: 0,
     checkedAnswer: null,
+    misspelledWords: [],
     submittedAnswer: '',
     showTimer: rememberedShowTimer,
     startedAt: 0,
@@ -231,6 +232,7 @@ export function createPracticeApp(root) {
     state.currentIndex = 0
     state.correctAnswers = 0
     state.checkedAnswer = null
+    state.misspelledWords = []
     state.submittedAnswer = ''
     state.startedAt = 0
     state.elapsedSeconds = 0
@@ -786,7 +788,13 @@ export function createPracticeApp(root) {
         const lessonStats = state.lessonStats[question.lessonId]
         if (lessonStats) {
           lessonStats.correct += 1
-        }
+        } 
+      } else {
+          state.misspelledWords.push({
+            prompt: question.prompt,
+            correct: question.answer,
+            submitted: answer
+          })
       }
 
       state.checkedAnswer = { correct }
@@ -871,6 +879,27 @@ export function createPracticeApp(root) {
                     )
                     .join(' · ')}
                 </p>
+              `
+              : ''
+          }
+          ${
+            state.misspelledWords.length > 0
+              ? `
+                <section class="misspelled-words" aria-labelledby="misspelled-words-heading">
+                  <h2 id="misspelled-words-heading">Words to practise</h2>
+                  <ul>
+                    ${state.misspelledWords
+                      .map(
+                        ({ prompt, correct, submitted }) => `
+                          <li>
+                            <strong>${escapeHtml(prompt)}</strong>: <strong>${escapeHtml(correct)}</strong>
+                            <span>Your spelling: ${escapeHtml(submitted || '—')}</span>
+                          </li>
+                        `
+                      )
+                      .join('')}
+                  </ul>
+                </section>
               `
               : ''
           }
