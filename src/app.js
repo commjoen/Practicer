@@ -5,7 +5,7 @@ import {
   isCorrectAnswer
 } from './session.js'
 import {
-  buildShortcutSearch,
+  buildShortcutSearch, 
   normalizeDirection,
   parseShortcutParams,
   resolveShortcutAction
