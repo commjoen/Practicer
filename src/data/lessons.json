@@ -46,7 +46,7 @@
       "lessons": [
         {
           "id": "dutch-lesson-1",
-          "name": "Lesson 1",
+          "name": "Unit 1- Lesson 1",
           "description": "Personal information and introductions.",
           "words": [
             { "source": "leeftijd", "target": "age" },
@@ -67,7 +67,7 @@
         },
         {
           "id": "dutch-lesson-2",
-          "name": "Lesson 2",
+          "name": "Unit 1- Lesson 2",
           "description": "Personality and feelings.",
           "words": [
             { "source": "actief", "target": "active" },
@@ -92,7 +92,7 @@
         },
         {
           "id": "dutch-lesson-3",
-          "name": "Lesson 3",
+          "name": "Unit 1- Lesson 3",
           "description": "Their talents.",
           "words": [
             { "source": "karakter", "target": "character" },
@@ -115,6 +115,71 @@
             { "source": "het is ons talent", "target": "It is our talent" },
             { "source": "Zij hebben een talent", "target": "They have a talent" },
             { "source": "Het is hun talent", "target": "It is their talent" }
+          ]
+        },
+        {
+          "id": "dutch-lesson-4",
+          "name": "Unit 2- Lesson 1",
+          "description": "Introduction to Unit 2.",
+          "words": [
+            { "source": "mooi, knap aantrekkelijk", "target": "attractive" },
+            { "source": "hoofdstad", "target": "capital" },
+            { "source": "land", "target": "country" },
+            { "source": "enorm, heel groot", "target": "enormous" },
+            { "source": "groot", "target": "huge" },
+            { "source": "inwoner", "target": "inhabitant" },
+            { "source": "monument", "target": "monument" },
+            { "source": "buur, buurman, buurvrouw", "target": "neighbor" },
+            { "source": "buurt, wijk", "target": "neighborhood" },
+            { "source": "heel klein", "target": "tiny" },
+            { "source": "toeristische attractie", "target": "tourist attraction" },
+            { "source": "dorp", "target": "village" },
+            { "source": "Woon je graag in... ?", "target": "Do you like living in... ?" },
+            { "source": "... is geweldig, want", "target": "... is great, because ..." },
+            { "source": "Hoe is het om in  ... te wonen?", "target": "What's it like to live in ... ?" }
+          ]
+        },
+        {
+          "id": "dutch-lesson-5",
+          "name": "Unit 2- Lesson 2",
+          "description": "Continuing with Unit 2.",
+          "words": [
+            { "source": "boven zeeniveau", "target": "above sea level" },
+            { "source": "vliegveld", "target": "airport" },
+            { "source": "onder zeeniveau", "target": "below sea level" },
+            { "source": "kanaal, gracht", "target": "canal" },
+            { "source": "stad", "target": "city" },
+            { "source": "dijk", "target": "dyke" },
+            { "source": "plat", "target": "flat" },
+            { "source": "haven", "target": "harbor" },
+            {"source": "heuvelachtig", "target": "hilly"},
+            {"source": "snelweg", "target": "motorway"},
+            {"source": "berg", "target": "mountain"},
+            {"source": "rivier", "target": "river"},
+            {"source": "plein", "target": "square"},
+            {"source": "metro", "target": "underground"},
+            {"source": "windmolen", "target": "windmill"}
+          ]
+        },
+        {
+          "id": "dutch-lesson-6",
+          "name": "Unit 2- Lesson 3",
+          "description": "Further exploration of Unit 2.",
+          "words": [
+            { "source": "roltrap", "target": "escalator" },
+            { "source": "jas", "target": "jacket" },
+            { "source": "landschap", "target": "landscape" },
+            { "source": "zitplaats, stoel", "target": "seat" },
+            { "source": "overstromen", "target": "to flood" },
+            { "source": "Kan jij het woord omschrijven?", "target": "Can you describe the word?" },
+            { "source": "Waar zou jij naartoe willen gaan?", "target": "Where would you like to go?" },
+            { "source": "Draai je boek om", "target": "Flip your book" },
+            { "source": "Dit is een huis", "target": "This is a house" },
+            { "source": "Dit is een tuin", "target": "This is a garden" },
+            { "source": "Dit zijn stoelen", "target": "These are chairs" },
+            { "source": "Dat zijn gordijnen", "target": "These are curtains" },
+            { "source": "geweldig", "target": "amazing" },
+            { "source": "bestemmingen", "target": "destinations" }
           ]
         }
       ]
