@@ -29,6 +29,13 @@ test('normalizeAnswer preserves case when case-sensitive mode is enabled', () =>
   assert.equal(normalizeAnswer('  Ho  La  ', { caseSensitive: true }), 'Ho La')
 })
 
+test('normalizeAnswer ignores punctuation when requested', () => {
+  assert.equal(
+    normalizeAnswer("  Don't—stop! ", { ignorePunctuation: true }),
+    'dontstop'
+  )
+})
+
 test('isCorrectAnswer ignores casing and surrounding whitespace', () => {
   assert.equal(isCorrectAnswer('  GATO ', 'gato'), true)
 })
@@ -43,6 +50,14 @@ test('isCorrectAnswer can enforce case-sensitive answers', () => {
 test('isCorrectAnswer still trims and collapses spaces when case-sensitive', () => {
   assert.equal(
     isCorrectAnswer('  open   ai ', 'open ai', { caseSensitive: true }),
+    true
+  )
+})
+
+test('isCorrectAnswer ignores punctuation only when requested', () => {
+  assert.equal(isCorrectAnswer("don't", 'dont'), false)
+  assert.equal(
+    isCorrectAnswer("don't", 'dont', { ignorePunctuation: true }),
     true
   )
 })

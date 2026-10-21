@@ -21,6 +21,7 @@ const WORDS_PER_PAGE = 5
 const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
 const RANDOMIZE_WORDS_STORAGE_KEY = 'practicer:randomizeWords'
 const CASE_SENSITIVE_STORAGE_KEY = 'practicer:caseSensitive'
+const IGNORE_PUNCTUATION_STORAGE_KEY = 'practicer:ignorePunctuation'
 const BALLOONS_SCRIPT_PATH = '/balloons.min.js'
 
 function getRememberedLanguagePackId() {
@@ -114,6 +115,33 @@ function rememberCaseSensitive(enabled) {
 
   try {
     window.localStorage.setItem(CASE_SENSITIVE_STORAGE_KEY, enabled ? '1' : '0')
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
+function getRememberedIgnorePunctuation() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem(IGNORE_PUNCTUATION_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberIgnorePunctuation(enabled) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(
+      IGNORE_PUNCTUATION_STORAGE_KEY,
+      enabled ? '1' : '0'
+    )
   } catch {
     // Ignore unavailable storage.
   }
@@ -322,6 +350,7 @@ export function createPracticeApp(root) {
   const rememberedShowTimer = getRememberedShowTimer()
   const rememberedRandomizeWords = getRememberedRandomizeWords()
   const rememberedCaseSensitive = getRememberedCaseSensitive()
+  const rememberedIgnorePunctuation = getRememberedIgnorePunctuation()
 
   const state = {
     languagePacks: lessonData.languagePacks,
@@ -338,6 +367,7 @@ export function createPracticeApp(root) {
     misspelledWords: [],
     submittedAnswer: '',
     caseSensitive: rememberedCaseSensitive,
+    ignorePunctuation: rememberedIgnorePunctuation,
     showTimer: rememberedShowTimer,
     startedAt: 0,
     elapsedSeconds: 0,
@@ -711,6 +741,15 @@ export function createPracticeApp(root) {
                 />
                 Make spelling checks case-sensitive
               </label>
+              <label class="timer-option">
+                <input
+                  type="checkbox"
+                  name="ignorePunctuation"
+                  value="1"
+                  ${state.ignorePunctuation ? 'checked' : ''}
+                />
+                Ignore punctuation in spelling checks
+              </label>
             </div>
             <div class="lesson-grid">
               ${activePack.lessons
@@ -767,6 +806,9 @@ export function createPracticeApp(root) {
     const timerInput = root.querySelector('input[name="showTimer"]')
     const randomizeWordsInput = root.querySelector('input[name="randomizeWords"]')
     const caseSensitiveInput = root.querySelector('input[name="caseSensitive"]')
+    const ignorePunctuationInput = root.querySelector(
+      'input[name="ignorePunctuation"]'
+    )
     const viewLessonButtons = root.querySelectorAll('[data-action="view-lesson"]')
 
     languagePackSelect.addEventListener('change', () => {
@@ -775,6 +817,7 @@ export function createPracticeApp(root) {
       state.showTimer = Boolean(timerInput?.checked)
       state.randomizeWords = Boolean(randomizeWordsInput?.checked)
       state.caseSensitive = Boolean(caseSensitiveInput?.checked)
+      state.ignorePunctuation = Boolean(ignorePunctuationInput?.checked)
       const nextPack = getActiveLanguagePack()
       const nextLessonIds = new Set(nextPack?.lessons.map((lesson) => lesson.id))
       state.selectedLessonIds = selectedLessonIds.filter((id) =>
@@ -791,6 +834,7 @@ export function createPracticeApp(root) {
         state.showTimer = Boolean(timerInput?.checked)
         state.randomizeWords = Boolean(randomizeWordsInput?.checked)
         state.caseSensitive = Boolean(caseSensitiveInput?.checked)
+        state.ignorePunctuation = Boolean(ignorePunctuationInput?.checked)
         syncUrlState()
         renderLessonPicker(
           message,
@@ -823,9 +867,11 @@ export function createPracticeApp(root) {
       state.showTimer = formData.get('showTimer') === '1'
       state.randomizeWords = formData.get('randomizeWords') === '1'
       state.caseSensitive = formData.get('caseSensitive') === '1'
+      state.ignorePunctuation = formData.get('ignorePunctuation') === '1'
       rememberShowTimer(state.showTimer)
       rememberRandomizeWords(state.randomizeWords)
       rememberCaseSensitive(state.caseSensitive)
+      rememberIgnorePunctuation(state.ignorePunctuation)
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLessonIds = selectedLessonIds
 
@@ -861,6 +907,14 @@ export function createPracticeApp(root) {
       ) {
         state.caseSensitive = event.target.checked
         rememberCaseSensitive(state.caseSensitive)
+      }
+
+      if (
+        event.target instanceof HTMLInputElement &&
+        event.target.name === 'ignorePunctuation'
+      ) {
+        state.ignorePunctuation = event.target.checked
+        rememberIgnorePunctuation(state.ignorePunctuation)
       }
     })
 
@@ -958,7 +1012,8 @@ export function createPracticeApp(root) {
       const answer = answerInput.value
       state.submittedAnswer = answer
       const correct = isCorrectAnswer(answer, question.acceptedAnswers, {
-        caseSensitive: state.caseSensitive
+        caseSensitive: state.caseSensitive,
+        ignorePunctuation: state.ignorePunctuation
       })
 
       if (correct) {

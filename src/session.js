@@ -1,5 +1,11 @@
-export function normalizeAnswer(value, { caseSensitive = false } = {}) {
-  const normalized = value.trim().replace(/\s+/g, ' ')
+export function normalizeAnswer(
+  value,
+  { caseSensitive = false, ignorePunctuation = false } = {}
+) {
+  const withoutPunctuation = ignorePunctuation
+    ? value.replace(/\p{P}/gu, '')
+    : value
+  const normalized = withoutPunctuation.trim().replace(/\s+/g, ' ')
   return caseSensitive ? normalized : normalized.toLowerCase()
 }
 
@@ -14,12 +20,13 @@ function toVariantArray(value) {
 export function isCorrectAnswer(
   answer,
   expectedAnswer,
-  { caseSensitive = false } = {}
+  { caseSensitive = false, ignorePunctuation = false } = {}
 ) {
-  const normalizedAnswer = normalizeAnswer(answer, { caseSensitive })
+  const options = { caseSensitive, ignorePunctuation }
+  const normalizedAnswer = normalizeAnswer(answer, options)
   return toVariantArray(expectedAnswer).some(
     (candidate) =>
-      normalizeAnswer(candidate, { caseSensitive }) === normalizedAnswer
+      normalizeAnswer(candidate, options) === normalizedAnswer
   )
 }
 
