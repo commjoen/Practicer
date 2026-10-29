@@ -129,14 +129,14 @@
             { "source": "groot", "target": "huge" },
             { "source": "inwoner", "target": "inhabitant" },
             { "source": "monument", "target": "monument" },
-            { "source": "buur, buurman, buurvrouw", "target": "neighbor" },
-            { "source": "buurt, wijk", "target": "neighborhood" },
+            { "source": "buur, buurman, buurvrouw", "target": "neighbour" },
+            { "source": "buurt, wijk", "target": "neighbourhood" },
             { "source": "heel klein", "target": "tiny" },
             { "source": "toeristische attractie", "target": "tourist attraction" },
             { "source": "dorp", "target": "village" },
             { "source": "Woon je graag in... ?", "target": "Do you like living in... ?" },
             { "source": "... is geweldig, want", "target": "... is great, because ..." },
-            { "source": "Hoe is het om in  ... te wonen?", "target": "What's it like to live in ... ?" }
+            { "source": "Hoe is het om in  ... te wonen?", "target": "What's it like living in ... ?" }
           ]
         },
         {
