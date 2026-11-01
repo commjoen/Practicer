@@ -151,7 +151,7 @@
             { "source": "stad", "target": "city" },
             { "source": "dijk", "target": "dyke" },
             { "source": "plat", "target": "flat" },
-            { "source": "haven", "target": "harbor" },
+            { "source": "haven", "target": "harbour" },
             {"source": "heuvelachtig", "target": "hilly"},
             {"source": "snelweg", "target": "motorway"},
             {"source": "berg", "target": "mountain"},
