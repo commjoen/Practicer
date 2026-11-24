@@ -181,6 +181,74 @@
             { "source": "geweldig", "target": "amazing" },
             { "source": "bestemmingen", "target": "destinations" }
           ]
+        },
+        {
+          "id": "dutch-lesson-7",
+          "name": "Unit 3- Lesson 1",
+          "description": "Buying and selling part 1",
+          "words": [
+            { "source": "warenhuis", "target": "department store" },
+            { "source": "roltrap", "target": "escalator" },
+            { "source": "duur", "target": "expensive" },
+            { "source": "eerste verdieping", "target": "first floor" },
+            { "source": "pashokje", "target": "fitting room" },
+            { "source": "trui met capuchon", "target": "hoodie" },
+            { "source": "artikel", "target": "product" },
+            { "source": "uitverkoop", "target": "sale" },
+            { "source": "tweede verdieping", "target": "second floor" },
+            { "source": "schoenmaat", "target": "shoe size" },
+            { "source": "aanbieding", "target": "special offer" },
+            { "source": "trainingspak", "target": "tracksuit" },
+            { "source": "ik neem het", "target": "I will take it" },
+            { "source": "Mag ik alstubilieft ... ?", "target": "May I have ... ?" },
+            { "source": "welke maat heb je?", "target": "What size are you?" }
+          ]
+        },
+        {
+          "id": "dutch-lesson-8",
+          "name": "Unit 3- Lesson 2",
+          "description": "Buying and selling part 2",
+          "words": [
+            { "source": "badpak", "target": "bathing suit" },
+            { "source": "goedkoop", "target": "cheap" },
+            { "source": "kleding", "target": "outfit" },
+            { "source": "(broek)zak", "target": "pocket" },
+            { "source": "(kassa)bon", "target": "receipt" },
+            { "source": "geld terug", "target": "refund" },
+            { "source": "mouw", "target": "sleeve" },
+            { "source": "zwembroek", "target": "swimming trunks" },
+            { "source": "rits", "target": "zipper" },
+            { "source": "omkleden", "target": "to change" },
+            { "source": "etalages kijken", "target": "to go window shopping" },
+            { "source": "aantrekken", "target": "to put on" },
+            { "source": "uitdoen", "target": "to take off" },
+            { "source": "passen", "target": "to try on" },
+            { "source": "het is the kort", "target": "it is too short" },
+            { "source": "het is te lang", "target": "it is too long" },
+            { "source": "het is te wijd", "target": "it is too wide" },
+            { "source": "het is te strak", "target": "it is too tight" }
+          ]
+        },
+        {
+          "id": "dutch-lesson-9",
+          "name": "Unit 3- Lesson 3",
+          "description": "Buying and selling part 3",
+          "words": [
+            { "source": "mensen", "target": "people" },
+            { "source": "en", "target": "and" },
+            { "source": "het is slecht weer.", "target": "the weather is bad." },
+            { "source": "boeken", "target": "books" },
+            { "source": "horloges", "target": "watches" },
+            { "source": "tassen", "target": "bags" },
+            { "source": "mode", "target": "fashion" },
+            { "source": "schoenen", "target": "shoes" },
+            { "source": "gedurende/tijdens", "target": "during" },
+            { "source": "geschikt", "target": "suitable" },
+            { "source": "teken lijnen", "target": "draw lines" },
+            { "source": "boos", "target": "angry" },
+            { "source": "moe", "target": "tired" },
+            { "source": "koud", "target": "cold" }
+          ]
         }
       ]
     }
