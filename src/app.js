@@ -16,10 +16,17 @@ import {
   getScorePercentage,
   SHOW_TIMER_STORAGE_KEY
 } from './progress-utils.js'
+import {
+  canUseSpeechSynthesis,
+  prepareSpeech,
+  speakText,
+  stopSpeaking
+} from './speech.js'
 
 const WORDS_PER_PAGE = 5
 const LAST_LANGUAGE_PACK_STORAGE_KEY = 'practicer:lastLanguagePackId'
 const RANDOMIZE_WORDS_STORAGE_KEY = 'practicer:randomizeWords'
+const AUTO_PLAY_AUDIO_STORAGE_KEY = 'practicer:autoPlayAudio'
 const CASE_SENSITIVE_STORAGE_KEY = 'practicer:caseSensitive'
 const IGNORE_PUNCTUATION_STORAGE_KEY = 'practicer:ignorePunctuation'
 const BALLOONS_SCRIPT_PATH = '/balloons.min.js'
@@ -67,6 +74,30 @@ function rememberShowTimer(enabled) {
 
   try {
     window.localStorage.setItem(SHOW_TIMER_STORAGE_KEY, enabled ? '1' : '0')
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
+function getRememberedAutoPlayAudio() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem(AUTO_PLAY_AUDIO_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberAutoPlayAudio(enabled) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(AUTO_PLAY_AUDIO_STORAGE_KEY, enabled ? '1' : '0')
   } catch {
     // Ignore unavailable storage.
   }
@@ -342,12 +373,33 @@ function combineWordValues(primary, secondary) {
   return [...new Set(values)]
 }
 
+function renderAudioPreviewButtons(values, language) {
+  return values
+    .map(
+      (value) => `
+        <button
+          type="button"
+          class="ghost-button audio-preview-button"
+          data-action="preview-audio"
+          data-text="${escapeHtml(value)}"
+          data-language="${escapeHtml(language)}"
+          aria-label="Hear ${escapeHtml(value)} in ${escapeHtml(language)}"
+        >
+          Hear
+        </button>
+      `
+    )
+    .join('')
+}
+
 export function createPracticeApp(root) {
+  prepareSpeech()
   const rememberedLanguagePackId = getRememberedLanguagePackId()
   const hasRememberedLanguagePack = lessonData.languagePacks.some(
     (pack) => pack.id === rememberedLanguagePackId
   )
   const rememberedShowTimer = getRememberedShowTimer()
+  const rememberedAutoPlayAudio = getRememberedAutoPlayAudio()
   const rememberedRandomizeWords = getRememberedRandomizeWords()
   const rememberedCaseSensitive = getRememberedCaseSensitive()
   const rememberedIgnorePunctuation = getRememberedIgnorePunctuation()
@@ -360,6 +412,7 @@ export function createPracticeApp(root) {
     selectedDirection: 'source-to-target',
     selectedLessonIds: [],
     randomizeWords: rememberedRandomizeWords,
+    autoPlayAudio: rememberedAutoPlayAudio,
     activeQueue: [],
     currentIndex: 0,
     correctAnswers: 0,
@@ -525,6 +578,7 @@ export function createPracticeApp(root) {
   }
 
   function renderLessonWordPreview(lessonId, page = 0) {
+    stopSpeaking()
     resetSession()
     const activePack = getActiveLanguagePack()
     if (!activePack) {
@@ -544,6 +598,7 @@ export function createPracticeApp(root) {
     const startIndex = currentPage * WORDS_PER_PAGE
     const pageWords = lesson.words.slice(startIndex, startIndex + WORDS_PER_PAGE)
     const hasWords = totalWords > 0
+    const speechSupported = canUseSpeechSynthesis()
     const rangeStart = hasWords ? startIndex + 1 : 0
     const rangeEnd = hasWords
       ? Math.min(startIndex + WORDS_PER_PAGE, totalWords)
@@ -576,13 +631,35 @@ export function createPracticeApp(root) {
                 hasWords
                   ? pageWords
                     .map((word) => {
-                      const source = combineWordValues(word.source, word.prompt).join(', ')
-                      const target = combineWordValues(word.target, word.answer).join(', ')
+                      const sourceValues = combineWordValues(word.source, word.prompt)
+                      const targetValues = combineWordValues(word.target, word.answer)
+                      const source = sourceValues.join(', ')
+                      const target = targetValues.join(', ')
 
                       return `
                         <tr>
-                          <td>${escapeHtml(source)}</td>
-                          <td>${escapeHtml(target)}</td>
+                          <td>
+                            ${escapeHtml(source)}
+                            ${
+                              speechSupported
+                                ? `<div class="audio-preview-controls">${renderAudioPreviewButtons(
+                                    sourceValues,
+                                    activePack.sourceLanguage
+                                  )}</div>`
+                                : ''
+                            }
+                          </td>
+                          <td>
+                            ${escapeHtml(target)}
+                            ${
+                              speechSupported
+                                ? `<div class="audio-preview-controls">${renderAudioPreviewButtons(
+                                    targetValues,
+                                    activePack.targetLanguage
+                                  )}</div>`
+                                : ''
+                            }
+                          </td>
                         </tr>
                       `
                     })
@@ -620,6 +697,12 @@ export function createPracticeApp(root) {
       renderLessonPicker('', '', lesson.id)
     })
 
+    root.querySelectorAll('[data-action="preview-audio"]').forEach((button) => {
+      button.addEventListener('click', () => {
+        speakText(button.dataset.text, button.dataset.language)
+      })
+    })
+
     root.querySelector('[data-action="previous-page"]')?.addEventListener('click', () => {
       renderLessonWordPreview(lesson.id, currentPage - 1)
     })
@@ -630,6 +713,7 @@ export function createPracticeApp(root) {
   }
 
   function renderLessonPicker(message = '', focusSelector = '', focusLessonId = '') {
+    stopSpeaking()
     resetSession()
     const activePack = getActiveLanguagePack()
     if (!activePack) {
@@ -723,6 +807,19 @@ export function createPracticeApp(root) {
                 />
                 Show count-up timer during practice
               </label>
+              ${
+                canUseSpeechSynthesis()
+                  ? `<label class="timer-option">
+                      <input
+                        type="checkbox"
+                        name="autoPlayAudio"
+                        value="1"
+                        ${state.autoPlayAudio ? 'checked' : ''}
+                      />
+                      Automatically play words during practice
+                    </label>`
+                  : ''
+              }
               <label class="timer-option">
                 <input
                   type="checkbox"
@@ -804,6 +901,7 @@ export function createPracticeApp(root) {
     const languagePackSelect = root.querySelector('#languagePack')
     const directionInputs = root.querySelectorAll('input[name="direction"]')
     const timerInput = root.querySelector('input[name="showTimer"]')
+    const autoPlayAudioInput = root.querySelector('input[name="autoPlayAudio"]')
     const randomizeWordsInput = root.querySelector('input[name="randomizeWords"]')
     const caseSensitiveInput = root.querySelector('input[name="caseSensitive"]')
     const ignorePunctuationInput = root.querySelector(
@@ -815,6 +913,7 @@ export function createPracticeApp(root) {
       const selectedLessonIds = getSelectedLessonIds(form)
       state.selectedLanguagePackId = languagePackSelect.value
       state.showTimer = Boolean(timerInput?.checked)
+      state.autoPlayAudio = Boolean(autoPlayAudioInput?.checked)
       state.randomizeWords = Boolean(randomizeWordsInput?.checked)
       state.caseSensitive = Boolean(caseSensitiveInput?.checked)
       state.ignorePunctuation = Boolean(ignorePunctuationInput?.checked)
@@ -832,6 +931,7 @@ export function createPracticeApp(root) {
         state.selectedLessonIds = getSelectedLessonIds(form)
         state.selectedDirection = input.value
         state.showTimer = Boolean(timerInput?.checked)
+        state.autoPlayAudio = Boolean(autoPlayAudioInput?.checked)
         state.randomizeWords = Boolean(randomizeWordsInput?.checked)
         state.caseSensitive = Boolean(caseSensitiveInput?.checked)
         state.ignorePunctuation = Boolean(ignorePunctuationInput?.checked)
@@ -865,10 +965,12 @@ export function createPracticeApp(root) {
           ? selectedDirection
           : 'source-to-target'
       state.showTimer = formData.get('showTimer') === '1'
+      state.autoPlayAudio = formData.get('autoPlayAudio') === '1'
       state.randomizeWords = formData.get('randomizeWords') === '1'
       state.caseSensitive = formData.get('caseSensitive') === '1'
       state.ignorePunctuation = formData.get('ignorePunctuation') === '1'
       rememberShowTimer(state.showTimer)
+      rememberAutoPlayAudio(state.autoPlayAudio)
       rememberRandomizeWords(state.randomizeWords)
       rememberCaseSensitive(state.caseSensitive)
       rememberIgnorePunctuation(state.ignorePunctuation)
@@ -891,6 +993,14 @@ export function createPracticeApp(root) {
       if (event.target instanceof HTMLInputElement && event.target.name === 'showTimer') {
         state.showTimer = event.target.checked
         rememberShowTimer(state.showTimer)
+      }
+
+      if (
+        event.target instanceof HTMLInputElement &&
+        event.target.name === 'autoPlayAudio'
+      ) {
+        state.autoPlayAudio = event.target.checked
+        rememberAutoPlayAudio(state.autoPlayAudio)
       }
 
       if (
@@ -935,6 +1045,12 @@ export function createPracticeApp(root) {
     const question = state.activeQueue[state.currentIndex]
     const isLastQuestion = state.currentIndex === state.activeQueue.length - 1
     const directionLabels = getDirectionLabels()
+    const speechSupported = canUseSpeechSynthesis()
+    const wordToHear = state.checkedAnswer ? question.answer : question.prompt
+    const languageToHear = state.checkedAnswer
+      ? directionLabels.answerLanguage
+      : directionLabels.promptLanguage
+    const hearLabel = state.checkedAnswer ? 'Hear correct word' : 'Hear word'
 
     root.innerHTML = `
       <main class="app-shell">
@@ -951,7 +1067,14 @@ export function createPracticeApp(root) {
             </div>
           </div>
           <p class="lesson-tag">${escapeHtml(question.lessonName)}</p>
-          <h1>${escapeHtml(question.prompt)}</h1>
+          <div class="prompt-heading">
+            <h1>${escapeHtml(question.prompt)}</h1>
+            ${
+              speechSupported
+                ? `<button type="button" class="ghost-button hear-word-button" data-action="hear-word">${hearLabel}</button>`
+                : ''
+            }
+          </div>
           <p class="lead">Type the ${escapeHtml(directionLabels.answerLanguage)} word that matches this meaning.</p>
 
           <form class="answer-form">
@@ -993,6 +1116,12 @@ export function createPracticeApp(root) {
     const restartButton = root.querySelector('[data-action="restart"]')
     restartButton.addEventListener('click', () => renderLessonPicker())
     startTimer()
+
+    const speakRequestedWord = () => speakText(wordToHear, languageToHear)
+    root.querySelector('[data-action="hear-word"]')?.addEventListener('click', speakRequestedWord)
+    if (state.autoPlayAudio) {
+      speakRequestedWord()
+    }
 
     const form = root.querySelector('.answer-form')
     const answerInput = root.querySelector('#answer')
@@ -1059,6 +1188,7 @@ export function createPracticeApp(root) {
   }
 
   function renderScore() {
+    stopSpeaking()
     if (timerIntervalId && typeof window !== 'undefined') {
       window.clearInterval(timerIntervalId)
       timerIntervalId = null

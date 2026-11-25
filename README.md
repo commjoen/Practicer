@@ -19,6 +19,7 @@ GitHub Pages URL: https://commjoen.github.io/Practicer/
 - Adds an option to enforce case-sensitive answer checks
 - Adds an option to ignore punctuation in answer checks
 - Lets learners practice in both language directions
+- Adds optional automatic audio during practice and listen buttons in word previews
 - Gives instant feedback after every answer
 - Shows a final score at the end of a practice round
 - Celebrates completed rounds with a balloons animation
@@ -28,7 +29,7 @@ GitHub Pages URL: https://commjoen.github.io/Practicer/
 1. Keep lesson content in JSON so new lessons are easy to add.
 2. Focus the first release on lesson selection, spelling practice, and scoring.
 3. Protect the repository with linting, tests, automated releases, Renovate, and GitHub Pages deployment.
-4. Expand later with richer lesson packs, saved progress, and audio prompts.
+4. Expand later with richer lesson packs and saved progress.
 
 ## Tech stack
 
