@@ -166,6 +166,21 @@ h2 {
   align-items: flex-end;
 }
 
+.prompt-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.prompt-heading h1 {
+  margin: 0;
+}
+
+.hear-word-button {
+  padding: 0.55rem 1rem;
+}
+
 .timer-readout {
   margin: 0;
 }
@@ -299,6 +314,18 @@ h2 {
 
 .word-preview-table th {
   color: #10263b;
+}
+
+.audio-preview-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.audio-preview-button {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.9rem;
 }
 
 .pagination-controls {
